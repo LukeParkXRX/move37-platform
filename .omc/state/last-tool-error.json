@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"git push origin main 2>&1\",\"timeout\":60000,\"description\":\"GitHub에 푸시\"}",
+  "error": "Exit code 1\nremote: warning: File .next/dev/cache/turbopack/600cd2fed/00000813.sst is 72.50 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        \nremote: error: Trace: 7e50a5ac8fa4be26e00bb4d627d2e0314aa93a1235c82ae7a443fcd651f7dba4        \nremote: error: See https://gh.io/lfs for more information.        \nremote: error: File .next/dev/cache/turbopack/600cd2fed/00000812.sst is 158.34 MB; this exceeds GitHub's file size limit of 100.00 MB        \nremote: error: GH001:...",
+  "timestamp": "2026-03-26T12:32:26.062Z",
+  "retry_count": 1
+}
