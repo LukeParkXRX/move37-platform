@@ -20,6 +20,29 @@ interface MeetingRoomProps {
 export function MeetingRoom({ roomName, participantName }: MeetingRoomProps) {
   const [connection, setConnection] = useState<ConnectionDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const inviteUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/meeting/${encodeURIComponent(roomName)}`
+    : "";
+
+  const handleCopyInvite = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+      const input = document.createElement("input");
+      input.value = inviteUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [inviteUrl]);
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -119,19 +142,74 @@ export function MeetingRoom({ roomName, participantName }: MeetingRoomProps) {
 
   // 미팅룸
   return (
-    <div className="h-screen" style={{ backgroundColor: "var(--color-black)" }}>
-      <LiveKitRoom
-        token={connection.participantToken}
-        serverUrl={connection.serverUrl}
-        video={true}
-        audio={true}
-        onDisconnected={handleDisconnected}
-        style={{ height: "100%" }}
-        data-lk-theme="default"
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--color-black)" }}>
+      {/* 초대 링크 바 */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "12px",
+          padding: "10px 20px",
+          backgroundColor: "var(--color-dark)",
+          borderBottom: "1px solid var(--color-border)",
+          flexShrink: 0,
+        }}
       >
-        <VideoConference />
-        <RoomAudioRenderer />
-      </LiveKitRoom>
+        <span style={{ fontSize: "13px", color: "var(--color-dim)" }}>
+          초대 링크:
+        </span>
+        <code
+          style={{
+            fontSize: "13px",
+            color: "var(--color-text)",
+            backgroundColor: "var(--color-card)",
+            padding: "4px 12px",
+            borderRadius: "6px",
+            border: "1px solid var(--color-border)",
+            maxWidth: "400px",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {inviteUrl}
+        </code>
+        <button
+          onClick={handleCopyInvite}
+          style={{
+            padding: "6px 14px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: 600,
+            border: "none",
+            cursor: "pointer",
+            backgroundColor: copied ? "var(--color-green)" : "var(--color-accent)",
+            color: "oklch(0.1 0 0)",
+            fontFamily: "var(--font-display)",
+            transition: "background-color 0.2s",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {copied ? "복사됨!" : "링크 복사"}
+        </button>
+      </div>
+
+      {/* LiveKit 미팅 */}
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <LiveKitRoom
+          token={connection.participantToken}
+          serverUrl={connection.serverUrl}
+          video={true}
+          audio={true}
+          onDisconnected={handleDisconnected}
+          style={{ height: "100%" }}
+          data-lk-theme="default"
+        >
+          <VideoConference />
+          <RoomAudioRenderer />
+        </LiveKitRoom>
+      </div>
     </div>
   );
 }
