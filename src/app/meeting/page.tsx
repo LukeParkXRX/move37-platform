@@ -9,6 +9,7 @@ export default function MeetingLobby() {
   const [roomName, setRoomName] = useState("");
   const [userName, setUserName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleJoinRoom = () => {
     if (!roomName.trim() || !userName.trim()) return;
@@ -25,18 +26,38 @@ export default function MeetingLobby() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "var(--color-black)" }}
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "var(--color-black)",
+      }}
     >
       {/* 헤더 */}
       <header
-        className="h-14 flex items-center px-5 border-b"
-        style={{ borderColor: "var(--color-border)" }}
+        style={{
+          height: "56px",
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "20px",
+          paddingRight: "20px",
+          borderBottom: "1px solid var(--color-border)",
+        }}
       >
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <Link
+          href="/"
+          style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}
+        >
           <span
-            className="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm"
             style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              fontWeight: 700,
+              fontSize: "14px",
               backgroundColor: "var(--color-accent)",
               color: "oklch(0.1 0 0)",
               fontFamily: "var(--font-display)",
@@ -45,8 +66,10 @@ export default function MeetingLobby() {
             M
           </span>
           <span
-            className="text-[16px] font-bold tracking-tight"
             style={{
+              fontSize: "16px",
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
               fontFamily: "var(--font-display)",
               color: "var(--color-text)",
             }}
@@ -57,13 +80,28 @@ export default function MeetingLobby() {
       </header>
 
       {/* 메인 콘텐츠 */}
-      <main className="flex-1 flex items-center justify-center px-5 py-12">
-        <div className="w-full max-w-md space-y-8">
+      <main
+        style={{
+          flex: 1,
+          display: "grid",
+          placeItems: "center",
+          padding: "48px 20px",
+        }}
+      >
+        <div style={{ width: "100%", maxWidth: "420px" }}>
           {/* 타이틀 */}
-          <div className="text-center space-y-2">
+          <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <div
-              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
-              style={{ backgroundColor: "var(--color-accent-dim)" }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "64px",
+                height: "64px",
+                borderRadius: "16px",
+                marginBottom: "16px",
+                backgroundColor: "var(--color-accent-dim)",
+              }}
             >
               <svg
                 width="32"
@@ -80,25 +118,32 @@ export default function MeetingLobby() {
               </svg>
             </div>
             <h1
-              className="text-3xl font-bold"
               style={{
+                fontSize: "32px",
+                fontWeight: 700,
                 fontFamily: "var(--font-display)",
                 color: "var(--color-text)",
+                margin: "0 0 8px 0",
               }}
             >
               화상 미팅
             </h1>
-            <p style={{ color: "var(--color-dim)", fontSize: "15px" }}>
+            <p style={{ color: "var(--color-dim)", fontSize: "15px", margin: 0 }}>
               Enabler와 실시간으로 만나 프로젝트를 논의하세요
             </p>
           </div>
 
           {/* 입력 폼 */}
-          <div className="space-y-4">
-            <div className="space-y-2">
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {/* 이름 */}
+            <div>
               <label
-                className="block text-sm"
-                style={{ color: "var(--color-dim)" }}
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  color: "var(--color-dim)",
+                  marginBottom: "6px",
+                }}
               >
                 이름
               </label>
@@ -107,18 +152,20 @@ export default function MeetingLobby() {
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 placeholder="표시될 이름을 입력하세요"
-                className="w-full px-4 py-3 rounded-xl text-[15px] outline-none transition-all duration-200"
+                onFocus={() => setFocusedField("name")}
+                onBlur={() => setFocusedField(null)}
                 style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  fontSize: "15px",
+                  outline: "none",
                   backgroundColor: "var(--color-card)",
-                  border: "1px solid var(--color-border)",
+                  border: `1px solid ${focusedField === "name" ? "var(--color-accent)" : "var(--color-border)"}`,
                   color: "var(--color-text)",
                   fontFamily: "var(--font-body)",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-accent)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-border)";
+                  boxSizing: "border-box",
+                  transition: "border-color 0.2s",
                 }}
               />
             </div>
@@ -127,46 +174,49 @@ export default function MeetingLobby() {
             <button
               onClick={handleCreateRoom}
               disabled={!userName.trim()}
-              className="w-full py-3.5 rounded-xl font-bold text-[15px] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
+                width: "100%",
+                padding: "14px",
+                borderRadius: "12px",
+                fontWeight: 700,
+                fontSize: "15px",
+                border: "none",
+                cursor: userName.trim() ? "pointer" : "not-allowed",
                 backgroundColor: "var(--color-accent)",
                 color: "oklch(0.1 0 0)",
                 fontFamily: "var(--font-display)",
-              }}
-              onMouseEnter={(e) => {
-                if (!e.currentTarget.disabled)
-                  e.currentTarget.style.opacity = "0.88";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = "1";
+                opacity: userName.trim() ? 1 : 0.4,
+                transition: "opacity 0.2s",
               }}
             >
               {isCreating ? "입장 중..." : "새 미팅 만들기"}
             </button>
 
             {/* 구분선 */}
-            <div className="flex items-center gap-4">
-              <div
-                className="flex-1 h-px"
-                style={{ backgroundColor: "var(--color-border)" }}
-              />
-              <span
-                className="text-xs"
-                style={{ color: "var(--color-dim)" }}
-              >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                margin: "4px 0",
+              }}
+            >
+              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
+              <span style={{ fontSize: "12px", color: "var(--color-dim)", whiteSpace: "nowrap" }}>
                 또는 기존 미팅 참가
               </span>
-              <div
-                className="flex-1 h-px"
-                style={{ backgroundColor: "var(--color-border)" }}
-              />
+              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
             </div>
 
-            {/* 기존 방 입장 */}
-            <div className="space-y-2">
+            {/* 미팅 코드 */}
+            <div>
               <label
-                className="block text-sm"
-                style={{ color: "var(--color-dim)" }}
+                style={{
+                  display: "block",
+                  fontSize: "13px",
+                  color: "var(--color-dim)",
+                  marginBottom: "6px",
+                }}
               >
                 미팅 코드
               </label>
@@ -175,41 +225,44 @@ export default function MeetingLobby() {
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="미팅 코드를 입력하세요"
-                className="w-full px-4 py-3 rounded-xl text-[15px] outline-none transition-all duration-200"
-                style={{
-                  backgroundColor: "var(--color-card)",
-                  border: "1px solid var(--color-border)",
-                  color: "var(--color-text)",
-                  fontFamily: "var(--font-body)",
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-accent)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "var(--color-border)";
-                }}
+                onFocus={() => setFocusedField("room")}
+                onBlur={() => setFocusedField(null)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleJoinRoom();
+                }}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  fontSize: "15px",
+                  outline: "none",
+                  backgroundColor: "var(--color-card)",
+                  border: `1px solid ${focusedField === "room" ? "var(--color-accent)" : "var(--color-border)"}`,
+                  color: "var(--color-text)",
+                  fontFamily: "var(--font-body)",
+                  boxSizing: "border-box",
+                  transition: "border-color 0.2s",
                 }}
               />
             </div>
 
+            {/* 미팅 참가 */}
             <button
               onClick={handleJoinRoom}
               disabled={!roomName.trim() || !userName.trim()}
-              className="w-full py-3.5 rounded-xl font-bold text-[15px] border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{
+                width: "100%",
+                padding: "14px",
+                borderRadius: "12px",
+                fontWeight: 700,
+                fontSize: "15px",
+                cursor: roomName.trim() && userName.trim() ? "pointer" : "not-allowed",
                 backgroundColor: "transparent",
-                borderColor: "var(--color-border)",
+                border: "1px solid var(--color-border)",
                 color: "var(--color-text)",
                 fontFamily: "var(--font-display)",
-              }}
-              onMouseEnter={(e) => {
-                if (!e.currentTarget.disabled)
-                  e.currentTarget.style.borderColor = "var(--color-dim)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--color-border)";
+                opacity: roomName.trim() && userName.trim() ? 1 : 0.4,
+                transition: "border-color 0.2s, opacity 0.2s",
               }}
             >
               미팅 참가
