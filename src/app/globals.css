@@ -126,10 +126,9 @@ section, main, article, aside, header, footer, nav {
   min-width: 0;
 }
 
-/* Prevent flex children from collapsing */
+/* Prevent flex children from overflowing */
 [class*="flex"] > *, [style*="flex"] > * {
   min-width: 0;
-  flex-shrink: 0;
 }
 
 ::selection {
