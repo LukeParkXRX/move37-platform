@@ -28,8 +28,6 @@ export default function MeetingLobby() {
     <div
       style={{
         minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
         backgroundColor: "var(--color-black)",
       }}
     >
@@ -80,15 +78,8 @@ export default function MeetingLobby() {
       </header>
 
       {/* 메인 콘텐츠 */}
-      <main
-        style={{
-          flex: 1,
-          display: "grid",
-          placeItems: "center",
-          padding: "48px 20px",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: "420px" }}>
+      <main style={{ padding: "80px 20px" }}>
+        <div style={{ maxWidth: "420px", margin: "0 auto" }}>
           {/* 타이틀 */}
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <div
