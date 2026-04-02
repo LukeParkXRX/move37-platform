@@ -180,3 +180,44 @@ section, main, article, aside, header, footer, nav {
   color: var(--color-accent) !important;
   border-color: var(--color-accent) !important;
 }
+
+/* ── LiveKit Theme Override ── */
+[data-lk-theme="default"] {
+  --lk-bg: var(--color-black);
+  --lk-bg2: var(--color-dark);
+  --lk-bg3: var(--color-card);
+  --lk-control-bg: var(--color-card);
+  --lk-control-hover-bg: var(--color-border);
+  --lk-fg: var(--color-text);
+  --lk-border-color: var(--color-border);
+  --lk-theme-color: var(--color-accent);
+  --lk-danger-color: var(--color-red);
+  --lk-success-color: var(--color-green);
+
+  font-family: var(--font-body);
+}
+
+[data-lk-theme="default"] .lk-control-bar {
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-dark);
+}
+
+[data-lk-theme="default"] .lk-button {
+  border-radius: var(--radius-lg);
+}
+
+[data-lk-theme="default"] .lk-disconnect-button {
+  background-color: var(--color-red);
+  border-radius: var(--radius-lg);
+}
+
+[data-lk-theme="default"] .lk-participant-tile {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+[data-lk-theme="default"] .lk-chat {
+  background-color: var(--color-dark);
+  border-left: 1px solid var(--color-border);
+}

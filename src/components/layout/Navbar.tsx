@@ -6,6 +6,7 @@ import Link from "next/link";
 const NAV_LINKS = [
   { label: "Enabler 찾기", href: "/enablers" },
   { label: "프로젝트 등록", href: "/projects/new" },
+  { label: "화상채팅", href: "/meeting" },
   { label: "인사이트", href: "/insights" },
   { label: "기업 서비스", href: "/organizations" },
 ];
