@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type TabMode = "startup" | "enabler";
-type PageMode = "signup" | "login";
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -333,148 +332,10 @@ function EnablerForm() {
   );
 }
 
-// ── Login Form ─────────────────────────────────────────────────────────────────
-
-function LoginForm({ onSwitchToSignup }: { onSwitchToSignup: () => void }) {
-  const router = useRouter();
-  const [id, setId] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  function handleLogin() {
-    if (id === "admin" && password === "admin") {
-      router.push("/admin/dashboard");
-    } else {
-      setError("아이디 또는 비밀번호가 올바르지 않습니다");
-    }
-  }
-
-  const demoAccounts = [
-    { label: "관리자", path: "/admin/dashboard" },
-    { label: "스타트업", path: "/my" },
-    { label: "Enabler", path: "/matching" },
-    { label: "기관 관리자", path: "/org/dashboard" },
-  ];
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-      {/* ID */}
-      <div>
-        <FieldLabel>아이디</FieldLabel>
-        <FieldInput placeholder="아이디 입력" value={id} onChange={setId} />
-      </div>
-
-      {/* Password */}
-      <div>
-        <FieldLabel>비밀번호</FieldLabel>
-        <FieldInput type="password" placeholder="비밀번호 입력" value={password} onChange={(v) => { setPassword(v); setError(""); }} />
-        {error && (
-          <p style={{ marginTop: "6px", fontSize: "13px", color: "var(--color-red, #ef4444)", fontFamily: "var(--font-body)" }}>
-            {error}
-          </p>
-        )}
-      </div>
-
-      {/* Login button */}
-      <button
-        type="button"
-        onClick={handleLogin}
-        style={{
-          width: "100%",
-          padding: "13px 20px",
-          borderRadius: "var(--radius-lg)",
-          backgroundColor: "var(--color-accent)",
-          color: "oklch(0.1 0 0)",
-          fontSize: "14px",
-          fontFamily: "var(--font-display)",
-          fontWeight: 700,
-          border: "none",
-          cursor: "pointer",
-          letterSpacing: "-0.01em",
-          transition: "opacity 0.15s ease, transform 0.15s ease",
-          boxShadow: "var(--shadow-accent)",
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
-          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-        }}
-      >
-        로그인
-      </button>
-
-      {/* Demo accounts */}
-      <div>
-        <p style={{ fontSize: "11px", fontFamily: "var(--font-body)", color: "var(--color-dim)", marginBottom: "8px", letterSpacing: "0.04em" }}>
-          데모 계정으로 로그인:
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-          {demoAccounts.map((account) => (
-            <button
-              key={account.label}
-              type="button"
-              onClick={() => router.push(account.path)}
-              style={{
-                fontSize: "12px",
-                fontFamily: "var(--font-body)",
-                color: "var(--color-dim)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "8px",
-                padding: "6px 12px",
-                backgroundColor: "transparent",
-                cursor: "pointer",
-                transition: "border-color 0.15s ease, color 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-accent)";
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--color-accent)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)";
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--color-dim)";
-              }}
-            >
-              {account.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Switch to signup */}
-      <p style={{ textAlign: "center", fontSize: "13px", fontFamily: "var(--font-body)", color: "var(--color-dim)" }}>
-        계정이 없으신가요?{" "}
-        <button
-          type="button"
-          onClick={onSwitchToSignup}
-          style={{
-            background: "none",
-            border: "none",
-            padding: 0,
-            color: "var(--color-accent)",
-            fontWeight: 600,
-            fontSize: "13px",
-            fontFamily: "var(--font-body)",
-            cursor: "pointer",
-            transition: "opacity 0.15s",
-          }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.75")}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
-        >
-          회원가입
-        </button>
-      </p>
-    </div>
-  );
-}
-
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<TabMode>("startup");
-  const [pageMode, setPageMode] = useState<PageMode>("signup");
 
   return (
     <div
@@ -889,7 +750,7 @@ export default function LoginPage() {
                 marginBottom: "6px",
               }}
             >
-              {pageMode === "login" ? "로그인" : "계정 만들기"}
+              계정 만들기
             </h1>
             <p
               style={{
@@ -899,18 +760,11 @@ export default function LoginPage() {
                 lineHeight: 1.5,
               }}
             >
-              {pageMode === "login" ? "계정에 로그인하세요." : "미국 시장 진출의 첫 걸음을 시작하세요."}
+              미국 시장 진출의 첫 걸음을 시작하세요.
             </p>
           </div>
 
-          {pageMode === "login" ? (
-            /* ── Login form ── */
-            <div key="login" style={{ animation: "var(--animate-slide-up)", animationDuration: "0.28s" }}>
-              <LoginForm onSwitchToSignup={() => setPageMode("signup")} />
-            </div>
-          ) : (
-            <>
-              {/* ── Tab switcher ── */}
+          {/* ── Tab switcher ── */}
               <div
                 style={{
                   display: "flex",
@@ -1082,28 +936,24 @@ export default function LoginPage() {
                 }}
               >
                 이미 계정이 있으신가요?{" "}
-                <button
-                  type="button"
-                  onClick={() => setPageMode("login")}
+                <Link
+                  href="/login"
                   style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
                     color: "var(--color-accent)",
                     fontWeight: 600,
-                    fontSize: "13px",
-                    fontFamily: "var(--font-body)",
-                    cursor: "pointer",
+                    textDecoration: "none",
                     transition: "opacity 0.15s",
                   }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.75")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.75")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")
+                  }
                 >
                   로그인
-                </button>
+                </Link>
               </p>
-            </>
-          )}
         </div>
       </div>
     </div>
