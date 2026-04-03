@@ -317,7 +317,7 @@ export const BOOKINGS: Booking[] = [
     completedAt: "2026-03-20T11:00:00Z",
     creditsAmount: 2,
     brief: "미국 B2B SaaS 파트너십 전략 및 초기 고객 발굴 방법론 논의",
-    meetingUrl: "https://zoom.us/j/mock001",
+    meetingUrl: "/meeting/session-b1?name=김태호",
   },
   {
     id: "b2",
@@ -329,7 +329,7 @@ export const BOOKINGS: Booking[] = [
     completedAt: "2026-03-21T15:30:00Z",
     creditsAmount: 3,
     brief: "Series A IR 자료 리뷰 및 미국 VC 투자 유치 전략 수립",
-    meetingUrl: "https://zoom.us/j/mock002",
+    meetingUrl: "/meeting/session-b2?name=김태호",
   },
   {
     id: "b3",
@@ -340,7 +340,7 @@ export const BOOKINGS: Booking[] = [
     scheduledAt: "2026-04-05T09:00:00Z",
     creditsAmount: 1,
     brief: "AI 결제 솔루션 미국 시장 포지셔닝 케미스트리 세션",
-    meetingUrl: "https://meet.google.com/mock003",
+    meetingUrl: "/meeting/session-b3?name=김태호",
   },
   {
     id: "b4",
@@ -373,7 +373,7 @@ export const BOOKINGS: Booking[] = [
     scheduledAt: "2026-04-08T15:00:00Z",
     creditsAmount: 2,
     brief: "핀테크 규제 환경 분석 — 미국 MSB 라이선스 취득 로드맵 논의",
-    meetingUrl: "https://zoom.us/j/mock006",
+    meetingUrl: "/meeting/session-b6?name=김태호",
   },
 ];
 

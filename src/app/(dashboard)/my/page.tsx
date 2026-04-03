@@ -481,10 +481,8 @@ export default function MyDashboardPage() {
                       )}
 
                       {booking.meetingUrl && (
-                        <a
+                        <Link
                           href={booking.meetingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
@@ -503,7 +501,7 @@ export default function MyDashboardPage() {
                           }}
                         >
                           <span>▶</span> 미팅 참여
-                        </a>
+                        </Link>
                       )}
                     </div>
                   );

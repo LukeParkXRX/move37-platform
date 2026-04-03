@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type TabMode = "startup" | "enabler";
+type PageMode = "signup" | "login";
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -332,10 +333,148 @@ function EnablerForm() {
   );
 }
 
+// ── Login Form ─────────────────────────────────────────────────────────────────
+
+function LoginForm({ onSwitchToSignup }: { onSwitchToSignup: () => void }) {
+  const router = useRouter();
+  const [id, setId] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  function handleLogin() {
+    if (id === "admin" && password === "admin") {
+      router.push("/admin/dashboard");
+    } else {
+      setError("아이디 또는 비밀번호가 올바르지 않습니다");
+    }
+  }
+
+  const demoAccounts = [
+    { label: "관리자", path: "/admin/dashboard" },
+    { label: "스타트업", path: "/my" },
+    { label: "Enabler", path: "/matching" },
+    { label: "기관 관리자", path: "/org/dashboard" },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+      {/* ID */}
+      <div>
+        <FieldLabel>아이디</FieldLabel>
+        <FieldInput placeholder="아이디 입력" value={id} onChange={setId} />
+      </div>
+
+      {/* Password */}
+      <div>
+        <FieldLabel>비밀번호</FieldLabel>
+        <FieldInput type="password" placeholder="비밀번호 입력" value={password} onChange={(v) => { setPassword(v); setError(""); }} />
+        {error && (
+          <p style={{ marginTop: "6px", fontSize: "13px", color: "var(--color-red, #ef4444)", fontFamily: "var(--font-body)" }}>
+            {error}
+          </p>
+        )}
+      </div>
+
+      {/* Login button */}
+      <button
+        type="button"
+        onClick={handleLogin}
+        style={{
+          width: "100%",
+          padding: "13px 20px",
+          borderRadius: "var(--radius-lg)",
+          backgroundColor: "var(--color-accent)",
+          color: "oklch(0.1 0 0)",
+          fontSize: "14px",
+          fontFamily: "var(--font-display)",
+          fontWeight: 700,
+          border: "none",
+          cursor: "pointer",
+          letterSpacing: "-0.01em",
+          transition: "opacity 0.15s ease, transform 0.15s ease",
+          boxShadow: "var(--shadow-accent)",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
+          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+        }}
+      >
+        로그인
+      </button>
+
+      {/* Demo accounts */}
+      <div>
+        <p style={{ fontSize: "11px", fontFamily: "var(--font-body)", color: "var(--color-dim)", marginBottom: "8px", letterSpacing: "0.04em" }}>
+          데모 계정으로 로그인:
+        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          {demoAccounts.map((account) => (
+            <button
+              key={account.label}
+              type="button"
+              onClick={() => router.push(account.path)}
+              style={{
+                fontSize: "12px",
+                fontFamily: "var(--font-body)",
+                color: "var(--color-dim)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "8px",
+                padding: "6px 12px",
+                backgroundColor: "transparent",
+                cursor: "pointer",
+                transition: "border-color 0.15s ease, color 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-accent)";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--color-accent)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--color-dim)";
+              }}
+            >
+              {account.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Switch to signup */}
+      <p style={{ textAlign: "center", fontSize: "13px", fontFamily: "var(--font-body)", color: "var(--color-dim)" }}>
+        계정이 없으신가요?{" "}
+        <button
+          type="button"
+          onClick={onSwitchToSignup}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            color: "var(--color-accent)",
+            fontWeight: 600,
+            fontSize: "13px",
+            fontFamily: "var(--font-body)",
+            cursor: "pointer",
+            transition: "opacity 0.15s",
+          }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.75")}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+        >
+          회원가입
+        </button>
+      </p>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<TabMode>("startup");
+  const [pageMode, setPageMode] = useState<PageMode>("signup");
 
   return (
     <div
@@ -750,7 +889,7 @@ export default function LoginPage() {
                 marginBottom: "6px",
               }}
             >
-              계정 만들기
+              {pageMode === "login" ? "로그인" : "계정 만들기"}
             </h1>
             <p
               style={{
@@ -760,234 +899,211 @@ export default function LoginPage() {
                 lineHeight: 1.5,
               }}
             >
-              미국 시장 진출의 첫 걸음을 시작하세요.
+              {pageMode === "login" ? "계정에 로그인하세요." : "미국 시장 진출의 첫 걸음을 시작하세요."}
             </p>
           </div>
 
-          {/* ── Tab switcher ── */}
-          <div
-            style={{
-              display: "flex",
-              backgroundColor: "oklch(0.14 0.005 280 / 0.8)",
-              border: "1px solid var(--color-border)",
-              borderRadius: "var(--radius-lg)",
-              padding: "3px",
-              marginBottom: "28px",
-              animation: "var(--animate-slide-up)",
-              animationDelay: "0.1s",
-            }}
-          >
-            {(
-              [
-                { key: "startup" as TabMode, label: "스타트업 / 기업" },
-                { key: "enabler" as TabMode, label: "Market Enabler" },
-              ] as const
-            ).map((tab) => {
-              const active = activeTab === tab.key;
-              return (
+          {pageMode === "login" ? (
+            /* ── Login form ── */
+            <div key="login" style={{ animation: "var(--animate-slide-up)", animationDuration: "0.28s" }}>
+              <LoginForm onSwitchToSignup={() => setPageMode("signup")} />
+            </div>
+          ) : (
+            <>
+              {/* ── Tab switcher ── */}
+              <div
+                style={{
+                  display: "flex",
+                  backgroundColor: "oklch(0.14 0.005 280 / 0.8)",
+                  border: "1px solid var(--color-border)",
+                  borderRadius: "var(--radius-lg)",
+                  padding: "3px",
+                  marginBottom: "28px",
+                  animation: "var(--animate-slide-up)",
+                  animationDelay: "0.1s",
+                }}
+              >
+                {(
+                  [
+                    { key: "startup" as TabMode, label: "스타트업 / 기업" },
+                    { key: "enabler" as TabMode, label: "Market Enabler" },
+                  ] as const
+                ).map((tab) => {
+                  const active = activeTab === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveTab(tab.key)}
+                      style={{
+                        flex: 1,
+                        padding: "8px 12px",
+                        borderRadius: "var(--radius-md)",
+                        fontSize: "13px",
+                        fontFamily: "var(--font-display)",
+                        fontWeight: active ? 700 : 500,
+                        color: active ? "oklch(0.1 0 0)" : "var(--color-dim)",
+                        backgroundColor: active ? "var(--color-accent)" : "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "all 0.2s var(--ease-out-expo)",
+                        letterSpacing: active ? "-0.01em" : "0",
+                        boxShadow: active
+                          ? "0 1px 6px oklch(0.91 0.2 110 / 0.25)"
+                          : "none",
+                      }}
+                    >
+                      {tab.key === "startup" ? "🚀 " : "🇺🇸 "}
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* ── Form content — animated tab transition ── */}
+              <div
+                key={activeTab}
+                style={{
+                  animation: "var(--animate-slide-up)",
+                  animationDuration: "0.28s",
+                }}
+              >
+                {activeTab === "startup" ? <StartupForm /> : <EnablerForm />}
+              </div>
+
+              {/* ── Submit button ── */}
+              <div
+                style={{
+                  marginTop: "24px",
+                  animation: "var(--animate-slide-up)",
+                  animationDelay: "0.15s",
+                }}
+              >
                 <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setActiveTab(tab.key)}
+                  type="submit"
                   style={{
-                    flex: 1,
-                    padding: "8px 12px",
-                    borderRadius: "var(--radius-md)",
-                    fontSize: "13px",
+                    width: "100%",
+                    padding: "13px 20px",
+                    borderRadius: "var(--radius-lg)",
+                    backgroundColor: "var(--color-accent)",
+                    color: "oklch(0.1 0 0)",
+                    fontSize: "14px",
                     fontFamily: "var(--font-display)",
-                    fontWeight: active ? 700 : 500,
-                    color: active ? "oklch(0.1 0 0)" : "var(--color-dim)",
-                    backgroundColor: active ? "var(--color-accent)" : "transparent",
+                    fontWeight: 700,
                     border: "none",
                     cursor: "pointer",
-                    transition: "all 0.2s var(--ease-out-expo)",
-                    letterSpacing: active ? "-0.01em" : "0",
-                    boxShadow: active
-                      ? "0 1px 6px oklch(0.91 0.2 110 / 0.25)"
-                      : "none",
+                    letterSpacing: "-0.01em",
+                    transition: "opacity 0.15s ease, transform 0.15s ease",
+                    boxShadow: "var(--shadow-accent)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
                   }}
                 >
-                  {tab.key === "startup" ? "🚀 " : "🇺🇸 "}
-                  {tab.label}
+                  {activeTab === "startup" ? "스타트업으로 시작하기" : "Enabler로 등록하기"}
                 </button>
-              );
-            })}
-          </div>
+              </div>
 
-          {/* ── Form content — animated tab transition ── */}
-          <div
-            key={activeTab}
-            style={{
-              animation: "var(--animate-slide-up)",
-              animationDuration: "0.28s",
-            }}
-          >
-            {activeTab === "startup" ? <StartupForm /> : <EnablerForm />}
-          </div>
+              {/* ── Divider ── */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  margin: "20px 0",
+                }}
+              >
+                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontFamily: "var(--font-body)",
+                    color: "var(--color-dim)",
+                    letterSpacing: "0.06em",
+                    flexShrink: 0,
+                  }}
+                >
+                  또는
+                </span>
+                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
+              </div>
 
-          {/* ── Submit button ── */}
-          <div
-            style={{
-              marginTop: "24px",
-              animation: "var(--animate-slide-up)",
-              animationDelay: "0.15s",
-            }}
-          >
-            <button
-              type="submit"
-              style={{
-                width: "100%",
-                padding: "13px 20px",
-                borderRadius: "var(--radius-lg)",
-                backgroundColor: "var(--color-accent)",
-                color: "oklch(0.1 0 0)",
-                fontSize: "14px",
-                fontFamily: "var(--font-display)",
-                fontWeight: 700,
-                border: "none",
-                cursor: "pointer",
-                letterSpacing: "-0.01em",
-                transition: "opacity 0.15s ease, transform 0.15s ease",
-                boxShadow: "var(--shadow-accent)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-                (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-              }}
-            >
-              {activeTab === "startup" ? "스타트업으로 시작하기" : "Enabler로 등록하기"}
-            </button>
-          </div>
+              {/* ── Google login button ── */}
+              <button
+                type="button"
+                style={{
+                  width: "100%",
+                  padding: "11px 20px",
+                  borderRadius: "var(--radius-lg)",
+                  backgroundColor: "transparent",
+                  border: "1px solid var(--color-border)",
+                  color: "var(--color-text)",
+                  fontSize: "14px",
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                  transition: "border-color 0.15s ease, background-color 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "oklch(0.4 0.008 280)";
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "oklch(0.14 0.005 280 / 0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)";
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                </svg>
+                Google로 계속하기
+              </button>
 
-          {/* ── Divider ── */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              margin: "20px 0",
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                height: "1px",
-                backgroundColor: "var(--color-border)",
-              }}
-            />
-            <span
-              style={{
-                fontSize: "11px",
-                fontFamily: "var(--font-body)",
-                color: "var(--color-dim)",
-                letterSpacing: "0.06em",
-                flexShrink: 0,
-              }}
-            >
-              또는
-            </span>
-            <div
-              style={{
-                flex: 1,
-                height: "1px",
-                backgroundColor: "var(--color-border)",
-              }}
-            />
-          </div>
-
-          {/* ── Google login button ── */}
-          <button
-            type="button"
-            style={{
-              width: "100%",
-              padding: "11px 20px",
-              borderRadius: "var(--radius-lg)",
-              backgroundColor: "transparent",
-              border: "1px solid var(--color-border)",
-              color: "var(--color-text)",
-              fontSize: "14px",
-              fontFamily: "var(--font-display)",
-              fontWeight: 600,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "10px",
-              transition: "border-color 0.15s ease, background-color 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor =
-                "oklch(0.4 0.008 280)";
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                "oklch(0.14 0.005 280 / 0.5)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor =
-                "var(--color-border)";
-              (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                "transparent";
-            }}
-          >
-            {/* Google SVG icon */}
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"
-              />
-            </svg>
-            Google로 계속하기
-          </button>
-
-          {/* ── Bottom link ── */}
-          <p
-            style={{
-              textAlign: "center",
-              marginTop: "24px",
-              fontSize: "13px",
-              fontFamily: "var(--font-body)",
-              color: "var(--color-dim)",
-            }}
-          >
-            이미 계정이 있으신가요?{" "}
-            <Link
-              href="/login"
-              style={{
-                color: "var(--color-accent)",
-                fontWeight: 600,
-                textDecoration: "none",
-                transition: "opacity 0.15s",
-              }}
-              onMouseEnter={(e) =>
-                ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.75")
-              }
-              onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")
-              }
-            >
-              로그인
-            </Link>
-          </p>
+              {/* ── Bottom link ── */}
+              <p
+                style={{
+                  textAlign: "center",
+                  marginTop: "24px",
+                  fontSize: "13px",
+                  fontFamily: "var(--font-body)",
+                  color: "var(--color-dim)",
+                }}
+              >
+                이미 계정이 있으신가요?{" "}
+                <button
+                  type="button"
+                  onClick={() => setPageMode("login")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    color: "var(--color-accent)",
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    fontFamily: "var(--font-body)",
+                    cursor: "pointer",
+                    transition: "opacity 0.15s",
+                  }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.75")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+                >
+                  로그인
+                </button>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

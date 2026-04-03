@@ -220,10 +220,8 @@ function ActionArea({ booking }: { booking: (typeof BOOKINGS)[number] }) {
 
   if (booking.status === "confirmed" && booking.meetingUrl) {
     return (
-      <a
+      <Link
         href={booking.meetingUrl}
-        target="_blank"
-        rel="noopener noreferrer"
         onMouseEnter={() => setBtnHovered(true)}
         onMouseLeave={() => setBtnHovered(false)}
         style={{
@@ -241,7 +239,7 @@ function ActionArea({ booking }: { booking: (typeof BOOKINGS)[number] }) {
         }}
       >
         미팅 참여
-      </a>
+      </Link>
     );
   }
 
