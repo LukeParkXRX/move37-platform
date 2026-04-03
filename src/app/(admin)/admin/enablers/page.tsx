@@ -106,7 +106,7 @@ function statusColor(status: string): React.CSSProperties {
 function renderStars(rating: number) {
   if (!rating) return <span style={{ color: "var(--color-dim)" }}>—</span>;
   return (
-    <span style={{ color: "var(--color-gold)", fontSize: 15 }}>
+    <span style={{ color: "var(--color-gold)", fontSize: 14, whiteSpace: "nowrap" as const }}>
       {"★".repeat(Math.round(rating))}
       {"☆".repeat(5 - Math.round(rating))}
       <span
@@ -336,7 +336,7 @@ export default function AdminEnablersPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "2fr 1.4fr 80px 80px 100px 120px 180px",
+            gridTemplateColumns: "2fr 1.4fr 90px 90px 130px 120px 190px",
             padding: "10px 20px",
             borderBottom: "1px solid var(--color-border)",
             background: "rgba(255,255,255,0.02)",
@@ -435,7 +435,7 @@ function EnablerRow({
           onClick={onToggleExpand}
           style={{
             display: "grid",
-            gridTemplateColumns: "2fr 1.4fr 80px 80px 100px 120px 180px",
+            gridTemplateColumns: "2fr 1.4fr 90px 90px 130px 120px 190px",
             padding: "14px 20px",
             alignItems: "center",
             cursor: "pointer",
