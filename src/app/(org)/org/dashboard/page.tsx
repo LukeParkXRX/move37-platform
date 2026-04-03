@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   B2B_STATS,
   STARTUP_CREDITS,
   RECENT_SESSIONS,
+  ORGANIZATIONS,
 } from "@/lib/constants/mock-data";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -13,6 +15,7 @@ type NavItem = {
   icon: string;
   label: string;
   id: string;
+  href: string;
 };
 
 type ActivityType = "session" | "credit" | "matching" | "alert" | "report";
@@ -26,13 +29,13 @@ type Activity = {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: "📊", label: "대시보드", id: "dashboard" },
-  { icon: "🚀", label: "스타트업 관리", id: "startups" },
-  { icon: "💳", label: "크레딧 관리", id: "credits" },
-  { icon: "👥", label: "Enabler Pool", id: "enablers" },
-  { icon: "📅", label: "세션 이력", id: "sessions" },
-  { icon: "📄", label: "리포트", id: "reports" },
-  { icon: "⚙️", label: "설정", id: "settings" },
+  { icon: "📊", label: "대시보드", id: "dashboard", href: "/org/dashboard" },
+  { icon: "🚀", label: "스타트업 관리", id: "startups", href: "/org/startups" },
+  { icon: "💳", label: "크레딧 관리", id: "credits", href: "/org/credits" },
+  { icon: "👥", label: "Enabler Pool", id: "enablers", href: "/org/enablers" },
+  { icon: "📅", label: "세션 이력", id: "sessions", href: "/org/sessions" },
+  { icon: "📄", label: "리포트", id: "reports", href: "/org/reports" },
+  { icon: "⚙️", label: "설정", id: "settings", href: "/org/settings" },
 ];
 
 const ACTIVITIES: Activity[] = [
@@ -83,7 +86,7 @@ function ColLabel({ children }: { children: React.ReactNode }) {
   return (
     <th
       style={{
-        fontSize: "10px",
+        fontSize: "12px",
         fontFamily: "var(--font-display)",
         fontWeight: 700,
         letterSpacing: "0.08em",
@@ -112,7 +115,8 @@ function StarRating({ value }: { value: number }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function OrgDashboardPage() {
-  const [activeNav, setActiveNav] = useState("dashboard");
+  const pathname = usePathname();
+  const org = ORGANIZATIONS[0];
 
   const remainingCredits = B2B_STATS.distributedCredits - B2B_STATS.usedCredits;
 
@@ -155,7 +159,7 @@ export default function OrgDashboardPage() {
                 alignItems: "center",
                 justifyContent: "center",
                 fontFamily: "var(--font-display)",
-                fontSize: "15px",
+                fontSize: "17px",
                 fontWeight: 800,
                 letterSpacing: "-0.03em",
               }}
@@ -165,7 +169,7 @@ export default function OrgDashboardPage() {
             <div style={{ minWidth: 0 }}>
               <p
                 style={{
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontFamily: "var(--font-display)",
                   fontWeight: 700,
                   color: "var(--color-text)",
@@ -175,11 +179,11 @@ export default function OrgDashboardPage() {
                   textOverflow: "ellipsis",
                 }}
               >
-                Seoul Startup Hub
+                {org.name}
               </p>
               <p
                 style={{
-                  fontSize: "11px",
+                  fontSize: "13px",
                   color: "var(--color-dim)",
                   lineHeight: 1.4,
                   marginTop: "1px",
@@ -188,7 +192,7 @@ export default function OrgDashboardPage() {
                   textOverflow: "ellipsis",
                 }}
               >
-                글로벌 액셀러레이팅 프로그램
+                {org.programName}
               </p>
             </div>
           </div>
@@ -208,11 +212,11 @@ export default function OrgDashboardPage() {
         {/* Nav items */}
         <nav style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
           {NAV_ITEMS.map((item) => {
-            const isActive = activeNav === item.id;
+            const isActive = pathname === item.href || (item.href !== "/org/dashboard" && pathname.startsWith(item.href));
             return (
-              <button
+              <Link
                 key={item.id}
-                onClick={() => setActiveNav(item.id)}
+                href={item.href}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -221,7 +225,7 @@ export default function OrgDashboardPage() {
                   borderRadius: "8px",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontFamily: "var(--font-body)",
                   fontWeight: isActive ? 600 : 400,
                   backgroundColor: isActive
@@ -232,27 +236,28 @@ export default function OrgDashboardPage() {
                   textAlign: "left",
                   width: "100%",
                   lineHeight: 1.4,
+                  textDecoration: "none",
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                    (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
                       "var(--color-card)";
-                    (e.currentTarget as HTMLButtonElement).style.color =
+                    (e.currentTarget as HTMLAnchorElement).style.color =
                       "var(--color-text)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                    (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
                       "transparent";
-                    (e.currentTarget as HTMLButtonElement).style.color =
+                    (e.currentTarget as HTMLAnchorElement).style.color =
                       "var(--color-dim)";
                   }
                 }}
               >
                 <span style={{ fontSize: "14px", lineHeight: 1 }}>{item.icon}</span>
                 {item.label}
-              </button>
+              </Link>
             );
           })}
         </nav>
@@ -275,7 +280,7 @@ export default function OrgDashboardPage() {
           <div>
             <h1
               style={{
-                fontSize: "20px",
+                fontSize: "22px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 800,
                 color: "var(--color-text)",
@@ -288,7 +293,7 @@ export default function OrgDashboardPage() {
             </h1>
             <p
               style={{
-                fontSize: "13px",
+                fontSize: "15px",
                 color: "var(--color-dim)",
                 fontFamily: "var(--font-body)",
                 lineHeight: 1.4,
@@ -304,7 +309,7 @@ export default function OrgDashboardPage() {
               style={{
                 padding: "8px 16px",
                 borderRadius: "8px",
-                fontSize: "13px",
+                fontSize: "15px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
                 backgroundColor: "transparent",
@@ -335,7 +340,7 @@ export default function OrgDashboardPage() {
               style={{
                 padding: "8px 16px",
                 borderRadius: "8px",
-                fontSize: "13px",
+                fontSize: "15px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 backgroundColor: "var(--color-accent)",
@@ -377,7 +382,7 @@ export default function OrgDashboardPage() {
           >
             <p
               style={{
-                fontSize: "11px",
+                fontSize: "13px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 letterSpacing: "0.08em",
@@ -390,7 +395,7 @@ export default function OrgDashboardPage() {
             </p>
             <p
               style={{
-                fontSize: "26px",
+                fontSize: "28px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 color: "var(--color-text)",
@@ -402,7 +407,7 @@ export default function OrgDashboardPage() {
               {B2B_STATS.registeredStartups}
               <span
                 style={{
-                  fontSize: "14px",
+                  fontSize: "16px",
                   fontWeight: 500,
                   color: "var(--color-dim)",
                   marginLeft: "3px",
@@ -413,7 +418,7 @@ export default function OrgDashboardPage() {
             </p>
             <p
               style={{
-                fontSize: "12px",
+                fontSize: "14px",
                 fontFamily: "var(--font-body)",
                 color: "var(--color-green)",
                 fontWeight: 500,
@@ -434,7 +439,7 @@ export default function OrgDashboardPage() {
           >
             <p
               style={{
-                fontSize: "11px",
+                fontSize: "13px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 letterSpacing: "0.08em",
@@ -447,7 +452,7 @@ export default function OrgDashboardPage() {
             </p>
             <p
               style={{
-                fontSize: "26px",
+                fontSize: "28px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 color: "var(--color-text)",
@@ -460,7 +465,7 @@ export default function OrgDashboardPage() {
             </p>
             <p
               style={{
-                fontSize: "12px",
+                fontSize: "14px",
                 fontFamily: "var(--font-body)",
                 color: "var(--color-blue)",
                 fontWeight: 500,
@@ -481,7 +486,7 @@ export default function OrgDashboardPage() {
           >
             <p
               style={{
-                fontSize: "11px",
+                fontSize: "13px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 letterSpacing: "0.08em",
@@ -494,7 +499,7 @@ export default function OrgDashboardPage() {
             </p>
             <p
               style={{
-                fontSize: "26px",
+                fontSize: "28px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 color: "var(--color-text)",
@@ -506,7 +511,7 @@ export default function OrgDashboardPage() {
               {B2B_STATS.completedSessions}
               <span
                 style={{
-                  fontSize: "14px",
+                  fontSize: "16px",
                   fontWeight: 500,
                   color: "var(--color-dim)",
                   marginLeft: "3px",
@@ -517,7 +522,7 @@ export default function OrgDashboardPage() {
             </p>
             <p
               style={{
-                fontSize: "12px",
+                fontSize: "14px",
                 fontFamily: "var(--font-body)",
                 color: "var(--color-green)",
                 fontWeight: 500,
@@ -538,7 +543,7 @@ export default function OrgDashboardPage() {
           >
             <p
               style={{
-                fontSize: "11px",
+                fontSize: "13px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 letterSpacing: "0.08em",
@@ -551,7 +556,7 @@ export default function OrgDashboardPage() {
             </p>
             <p
               style={{
-                fontSize: "26px",
+                fontSize: "28px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 color: "var(--color-accent)",
@@ -564,7 +569,7 @@ export default function OrgDashboardPage() {
             </p>
             <p
               style={{
-                fontSize: "12px",
+                fontSize: "14px",
                 fontFamily: "var(--font-body)",
                 color: "var(--color-accent)",
                 fontWeight: 500,
@@ -604,7 +609,7 @@ export default function OrgDashboardPage() {
             >
               <p
                 style={{
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontFamily: "var(--font-display)",
                   fontWeight: 700,
                   color: "var(--color-text)",
@@ -613,15 +618,28 @@ export default function OrgDashboardPage() {
               >
                 스타트업별 크레딧 현황
               </p>
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontFamily: "var(--font-body)",
-                  color: "var(--color-dim)",
-                }}
-              >
-                {STARTUP_CREDITS.length}개 스타트업
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    fontFamily: "var(--font-body)",
+                    color: "var(--color-dim)",
+                  }}
+                >
+                  {STARTUP_CREDITS.length}개 스타트업
+                </span>
+                <Link
+                  href="/org/credits"
+                  style={{
+                    fontSize: "13px",
+                    fontFamily: "var(--font-body)",
+                    color: "var(--color-accent)",
+                    textDecoration: "none",
+                  }}
+                >
+                  전체 보기 →
+                </Link>
+              </div>
             </div>
 
             <div style={{ overflowX: "auto" }}>
@@ -666,7 +684,7 @@ export default function OrgDashboardPage() {
                         <td
                           style={{
                             padding: "12px 12px",
-                            fontSize: "13px",
+                            fontSize: "15px",
                             fontFamily: "var(--font-body)",
                             fontWeight: 600,
                             color: "var(--color-text)",
@@ -677,7 +695,7 @@ export default function OrgDashboardPage() {
                         <td
                           style={{
                             padding: "12px 12px",
-                            fontSize: "13px",
+                            fontSize: "15px",
                             fontFamily: "var(--font-mono)",
                             color: "var(--color-dim)",
                           }}
@@ -687,7 +705,7 @@ export default function OrgDashboardPage() {
                         <td
                           style={{
                             padding: "12px 12px",
-                            fontSize: "13px",
+                            fontSize: "15px",
                             fontFamily: "var(--font-mono)",
                             color: "var(--color-dim)",
                           }}
@@ -697,7 +715,7 @@ export default function OrgDashboardPage() {
                         <td
                           style={{
                             padding: "12px 12px",
-                            fontSize: "13px",
+                            fontSize: "15px",
                             fontFamily: "var(--font-mono)",
                             fontWeight: 700,
                             color:
@@ -716,7 +734,7 @@ export default function OrgDashboardPage() {
                               display: "inline-flex",
                               alignItems: "center",
                               gap: "5px",
-                              fontSize: "12px",
+                              fontSize: "14px",
                               fontFamily: "var(--font-body)",
                               fontWeight: 500,
                               color: status.color,
@@ -762,7 +780,7 @@ export default function OrgDashboardPage() {
             >
               <p
                 style={{
-                  fontSize: "13px",
+                  fontSize: "15px",
                   fontFamily: "var(--font-display)",
                   fontWeight: 700,
                   color: "var(--color-text)",
@@ -773,7 +791,7 @@ export default function OrgDashboardPage() {
               </p>
               <span
                 style={{
-                  fontSize: "11px",
+                  fontSize: "13px",
                   fontFamily: "var(--font-body)",
                   color: "var(--color-dim)",
                 }}
@@ -822,7 +840,7 @@ export default function OrgDashboardPage() {
                       <td
                         style={{
                           padding: "12px 12px",
-                          fontSize: "13px",
+                          fontSize: "15px",
                           fontFamily: "var(--font-body)",
                           fontWeight: 600,
                           color: "var(--color-text)",
@@ -836,7 +854,7 @@ export default function OrgDashboardPage() {
                       <td
                         style={{
                           padding: "12px 12px",
-                          fontSize: "12px",
+                          fontSize: "14px",
                           fontFamily: "var(--font-body)",
                           color: "var(--color-dim)",
                           overflow: "hidden",
@@ -849,7 +867,7 @@ export default function OrgDashboardPage() {
                       <td
                         style={{
                           padding: "12px 12px",
-                          fontSize: "12px",
+                          fontSize: "14px",
                           fontFamily: "var(--font-mono)",
                           color: "var(--color-dim)",
                           whiteSpace: "nowrap",
@@ -860,7 +878,7 @@ export default function OrgDashboardPage() {
                       <td
                         style={{
                           padding: "12px 12px",
-                          fontSize: "13px",
+                          fontSize: "15px",
                           fontFamily: "var(--font-mono)",
                           fontWeight: 700,
                           color: "var(--color-text)",
@@ -896,7 +914,7 @@ export default function OrgDashboardPage() {
           >
             <p
               style={{
-                fontSize: "13px",
+                fontSize: "15px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 color: "var(--color-text)",
@@ -950,7 +968,7 @@ export default function OrgDashboardPage() {
                   />
                   <p
                     style={{
-                      fontSize: "13px",
+                      fontSize: "15px",
                       fontFamily: "var(--font-body)",
                       color: "var(--color-text)",
                       lineHeight: 1.4,
@@ -964,7 +982,7 @@ export default function OrgDashboardPage() {
                 </div>
                 <span
                   style={{
-                    fontSize: "12px",
+                    fontSize: "14px",
                     fontFamily: "var(--font-body)",
                     color: "var(--color-dim)",
                     whiteSpace: "nowrap",

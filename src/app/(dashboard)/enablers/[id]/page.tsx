@@ -156,6 +156,20 @@ export default function EnablerProfilePage() {
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : enabler.rating.toFixed(1);
 
+  // 별점 분포 계산
+  const ratingDistribution = [5, 4, 3, 2, 1].map((star) => ({
+    star,
+    count: reviews.filter((r) => r.rating === star).length,
+    pct: reviews.length > 0
+      ? Math.round((reviews.filter((r) => r.rating === star).length / reviews.length) * 100)
+      : 0,
+  }));
+
+  function formatDate(dateStr: string) {
+    const [y, m, d] = dateStr.split("-");
+    return `${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
+  }
+
   return (
     <div
       style={{
@@ -663,33 +677,7 @@ export default function EnablerProfilePage() {
               padding: "28px",
             }}
           >
-            <SectionHeading
-              action={
-                <div className="flex items-center gap-2">
-                  <span
-                    style={{
-                      fontSize: "15px",
-                      fontFamily: "var(--font-display)",
-                      fontWeight: 700,
-                      color: "var(--color-gold)",
-                    }}
-                  >
-                    ★ {avgRating}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      color: "var(--color-dim)",
-                      fontFamily: "var(--font-body)",
-                    }}
-                  >
-                    ({reviews.length}개)
-                  </span>
-                </div>
-              }
-            >
-              리뷰
-            </SectionHeading>
+            <SectionHeading>리뷰</SectionHeading>
 
             {reviews.length === 0 ? (
               <p
@@ -703,97 +691,255 @@ export default function EnablerProfilePage() {
                 아직 리뷰가 없습니다.
               </p>
             ) : (
-              <div>
-                {reviews.map((review, i) => (
+              <>
+                {/* ── Rating Summary ── */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "28px",
+                    alignItems: "center",
+                    padding: "20px 24px",
+                    backgroundColor: "var(--color-black)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: "12px",
+                    marginBottom: "24px",
+                  }}
+                >
+                  {/* Left: big average number */}
                   <div
-                    key={review.id}
                     style={{
-                      padding: "16px 0",
-                      borderBottom:
-                        i < reviews.length - 1
-                          ? "1px solid var(--color-border)"
-                          : "none",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "6px",
+                      minWidth: "80px",
                     }}
                   >
-                    {/* Reviewer header */}
-                    <div
-                      className="flex items-center gap-2.5 mb-3"
-                    >
-                      {/* Mini avatar */}
-                      {review.authorAvatar ? (
-                        <img
-                          src={review.authorAvatar}
-                          alt={review.authorName}
-                          style={{
-                            width: "48px",
-                            height: "48px",
-                            minWidth: "48px",
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: "48px",
-                            height: "48px",
-                            minWidth: "48px",
-                            borderRadius: "50%",
-                            backgroundColor: "var(--color-card)",
-                            border: "1px solid var(--color-border)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "10px",
-                            fontFamily: "var(--font-display)",
-                            fontWeight: 700,
-                            color: "var(--color-dim)",
-                          }}
-                        >
-                          {review.authorName.charAt(0)}
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span
-                            style={{
-                              fontSize: "15px",
-                              fontFamily: "var(--font-display)",
-                              fontWeight: 700,
-                              color: "var(--color-text)",
-                            }}
-                          >
-                            {review.authorName}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              color: "var(--color-dim)",
-                              fontFamily: "var(--font-body)",
-                            }}
-                          >
-                            {review.createdAt}
-                          </span>
-                        </div>
-                        <StarRow rating={review.rating} />
-                      </div>
-                    </div>
-
-                    {/* Comment */}
-                    <p
+                    <span
                       style={{
-                        fontSize: "15px",
-                        fontFamily: "var(--font-body)",
-                        color: "var(--color-text)",
-                        lineHeight: 1.65,
-                        paddingLeft: "40px",
+                        fontSize: "52px",
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 800,
+                        color: "var(--color-gold)",
+                        letterSpacing: "-0.03em",
+                        lineHeight: 1,
                       }}
                     >
-                      {review.comment}
-                    </p>
+                      {avgRating}
+                    </span>
+                    <StarRow rating={parseFloat(avgRating)} />
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontFamily: "var(--font-body)",
+                        color: "var(--color-dim)",
+                        marginTop: "2px",
+                      }}
+                    >
+                      {reviews.length}개 리뷰
+                    </span>
                   </div>
-                ))}
-              </div>
+
+                  {/* Divider */}
+                  <div
+                    style={{
+                      width: "1px",
+                      alignSelf: "stretch",
+                      backgroundColor: "var(--color-border)",
+                      flexShrink: 0,
+                    }}
+                  />
+
+                  {/* Right: distribution bars */}
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "6px",
+                    }}
+                  >
+                    {ratingDistribution.map(({ star, count, pct }) => (
+                      <div
+                        key={star}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        {/* Star label */}
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontFamily: "var(--font-mono)",
+                            color: "var(--color-dim)",
+                            minWidth: "18px",
+                            textAlign: "right",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {star}
+                        </span>
+                        <svg
+                          style={{
+                            width: "11px",
+                            height: "11px",
+                            flexShrink: 0,
+                            fill: pct > 0 ? "var(--color-gold)" : "var(--color-border)",
+                          }}
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                        {/* Bar track */}
+                        <div
+                          style={{
+                            flex: 1,
+                            height: "6px",
+                            backgroundColor: "var(--color-border)",
+                            borderRadius: "9999px",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: `${pct}%`,
+                              height: "100%",
+                              backgroundColor: "var(--color-gold)",
+                              borderRadius: "9999px",
+                              transition: "width 0.4s ease",
+                            }}
+                          />
+                        </div>
+                        {/* Count */}
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontFamily: "var(--font-mono)",
+                            color: count > 0 ? "var(--color-dim)" : "var(--color-border)",
+                            minWidth: "16px",
+                            textAlign: "right",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Individual reviews ── */}
+                <div>
+                  {reviews.map((review, i) => (
+                    <div
+                      key={review.id}
+                      style={{
+                        padding: "20px 0",
+                        borderBottom:
+                          i < reviews.length - 1
+                            ? "1px solid var(--color-border)"
+                            : "none",
+                      }}
+                    >
+                      {/* Reviewer header */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "12px",
+                          marginBottom: "12px",
+                        }}
+                      >
+                        {/* Avatar */}
+                        {review.authorAvatar ? (
+                          <img
+                            src={review.authorAvatar}
+                            alt={review.authorName}
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              minWidth: "40px",
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                              border: "1px solid var(--color-border)",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              minWidth: "40px",
+                              borderRadius: "50%",
+                              backgroundColor: "var(--color-card)",
+                              border: "1px solid var(--color-border)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "14px",
+                              fontFamily: "var(--font-display)",
+                              fontWeight: 700,
+                              color: "var(--color-dim)",
+                            }}
+                          >
+                            {review.authorName.charAt(0)}
+                          </div>
+                        )}
+
+                        {/* Name + stars + date */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: "8px",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: "15px",
+                                fontFamily: "var(--font-display)",
+                                fontWeight: 700,
+                                color: "var(--color-text)",
+                              }}
+                            >
+                              {review.authorName}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                color: "var(--color-dim)",
+                                fontFamily: "var(--font-body)",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {formatDate(review.createdAt)}
+                            </span>
+                          </div>
+                          <StarRow rating={review.rating} />
+                        </div>
+                      </div>
+
+                      {/* Comment */}
+                      <p
+                        style={{
+                          fontSize: "15px",
+                          fontFamily: "var(--font-body)",
+                          color: "var(--color-text)",
+                          lineHeight: 1.7,
+                          paddingLeft: "52px",
+                        }}
+                      >
+                        {review.comment}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>

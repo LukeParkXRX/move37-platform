@@ -1,0 +1,459 @@
+"use client";
+
+import {
+  ENABLERS,
+  BOOKINGS,
+  ORGANIZATIONS,
+  MOCK_USERS,
+  CREDIT_TRANSACTIONS,
+  STARTUP_CREDITS,
+} from "@/lib/constants/mock-data";
+
+const TABLE_HEADER: React.CSSProperties = {
+  fontSize: 12,
+  fontFamily: "var(--font-display)",
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "var(--color-dim)",
+  background: "var(--color-dark)",
+  borderBottom: "1px solid var(--color-border)",
+  padding: "10px 14px",
+  textAlign: "left",
+};
+
+const TABLE_CELL: React.CSSProperties = {
+  padding: "11px 14px",
+  fontSize: 15,
+  color: "var(--color-text)",
+  borderBottom: "1px solid var(--color-border)",
+  verticalAlign: "middle",
+};
+
+const CARD: React.CSSProperties = {
+  background: "var(--color-card)",
+  border: "1px solid var(--color-border)",
+  borderRadius: 12,
+  overflow: "hidden",
+};
+
+const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
+  pending:   { bg: "rgba(251,191,36,0.15)",  color: "#fbbf24" },
+  confirmed: { bg: "rgba(59,130,246,0.15)",  color: "#60a5fa" },
+  completed: { bg: "rgba(34,197,94,0.15)",   color: "#4ade80" },
+  cancelled: { bg: "rgba(239,68,68,0.15)",   color: "#f87171" },
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  pending:   "대기중",
+  confirmed: "확정",
+  completed: "완료",
+  cancelled: "취소",
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  chemistry: "케미스트리",
+  standard:  "스탠다드",
+  project:   "프로젝트",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_COLORS[status] ?? { bg: "rgba(255,255,255,0.1)", color: "var(--color-dim)" };
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "3px 9px",
+        borderRadius: 6,
+        fontSize: 13,
+        fontWeight: 600,
+        fontFamily: "var(--font-display)",
+        background: s.bg,
+        color: s.color,
+        letterSpacing: "0.03em",
+      }}
+    >
+      {STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
+
+function KPICard({
+  label,
+  value,
+  valueColor,
+  sub,
+}: {
+  label: string;
+  value: string | number;
+  valueColor: string;
+  sub?: string;
+}) {
+  return (
+    <div
+      style={{
+        ...CARD,
+        padding: "20px 22px 18px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 12,
+          fontFamily: "var(--font-display)",
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: "var(--color-dim)",
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: 30,
+          fontWeight: 700,
+          fontFamily: "var(--font-display)",
+          color: valueColor,
+          lineHeight: 1.1,
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {value}
+      </div>
+      {sub && (
+        <div style={{ fontSize: 13, color: "var(--color-dim)", marginTop: 2 }}>{sub}</div>
+      )}
+    </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  // KPI 계산
+  const totalUsers = MOCK_USERS.length;
+  const activeEnablers = ENABLERS.filter((e) => e.status === "approved").length;
+  const totalOrgs = ORGANIZATIONS.length;
+  const totalBookings = BOOKINGS.length;
+  const totalCredits = ORGANIZATIONS.reduce((sum, o) => sum + o.totalCredits, 0);
+
+  // 예약 목록 정렬 (최신순)
+  const sortedBookings = [...BOOKINGS].sort(
+    (a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
+  );
+
+  // 평균 재요청률
+  const avgReRequest = Math.round(
+    ENABLERS.reduce((sum, e) => sum + e.reRequestRate, 0) / ENABLERS.length
+  );
+
+  // 이번 달 완료 세션 (2026-04)
+  const thisMonthCompleted = BOOKINGS.filter(
+    (b) => b.status === "completed" && b.scheduledAt.startsWith("2026-03")
+  ).length;
+
+  return (
+    <div style={{ fontFamily: "var(--font-body)" }}>
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <h1
+          style={{
+            fontSize: 24,
+            fontWeight: 700,
+            fontFamily: "var(--font-display)",
+            color: "var(--color-text)",
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}
+        >
+          플랫폼 대시보드
+        </h1>
+        <p
+          style={{
+            fontSize: 16,
+            color: "var(--color-dim)",
+            margin: "6px 0 0",
+          }}
+        >
+          전체 현황을 확인하세요
+        </p>
+      </div>
+
+      {/* KPI Cards */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, 1fr)",
+          gap: 14,
+          marginBottom: 28,
+        }}
+      >
+        <KPICard
+          label="총 사용자"
+          value={totalUsers}
+          valueColor="var(--color-text)"
+          sub="등록된 전체 계정"
+        />
+        <KPICard
+          label="활성 Enabler"
+          value={activeEnablers}
+          valueColor="var(--color-accent)"
+          sub="승인 완료"
+        />
+        <KPICard
+          label="등록 기관"
+          value={totalOrgs}
+          valueColor="#60a5fa"
+          sub="파트너 기관"
+        />
+        <KPICard
+          label="총 예약"
+          value={totalBookings}
+          valueColor="#4ade80"
+          sub="전체 세션"
+        />
+        <KPICard
+          label="총 크레딧 유통"
+          value={`${totalCredits.toLocaleString()} C`}
+          valueColor="#fbbf24"
+          sub="기관 배정 합계"
+        />
+      </div>
+
+      {/* Two-column layout */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 16,
+          marginBottom: 16,
+        }}
+      >
+        {/* 최근 예약 테이블 */}
+        <div style={CARD}>
+          <div
+            style={{
+              padding: "16px 20px 14px",
+              borderBottom: "1px solid var(--color-border)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                fontFamily: "var(--font-display)",
+                color: "var(--color-text)",
+              }}
+            >
+              최근 예약
+            </div>
+            <div style={{ fontSize: 13, color: "var(--color-dim)", marginTop: 3 }}>
+              전체 세션 · 최신순
+            </div>
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={TABLE_HEADER}>예약 ID</th>
+                <th style={TABLE_HEADER}>상태</th>
+                <th style={TABLE_HEADER}>타입</th>
+                <th style={TABLE_HEADER}>일정</th>
+                <th style={{ ...TABLE_HEADER, textAlign: "right" }}>크레딧</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedBookings.map((booking) => {
+                const date = new Date(booking.scheduledAt);
+                const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+                return (
+                  <tr key={booking.id}>
+                    <td style={TABLE_CELL}>
+                      <span
+                        style={{
+                          fontFamily: "var(--font-display)",
+                          fontSize: 14,
+                          color: "var(--color-dim)",
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        #{booking.id.toUpperCase()}
+                      </span>
+                    </td>
+                    <td style={TABLE_CELL}>
+                      <StatusBadge status={booking.status} />
+                    </td>
+                    <td style={{ ...TABLE_CELL, color: "var(--color-dim)", fontSize: 14 }}>
+                      {TYPE_LABELS[booking.type] ?? booking.type}
+                    </td>
+                    <td style={{ ...TABLE_CELL, color: "var(--color-dim)", fontSize: 14 }}>
+                      {dateStr}
+                    </td>
+                    <td
+                      style={{
+                        ...TABLE_CELL,
+                        textAlign: "right",
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 600,
+                        fontSize: 15,
+                        color: "#fbbf24",
+                      }}
+                    >
+                      {booking.creditsAmount}C
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 기관별 크레딧 테이블 */}
+        <div style={CARD}>
+          <div
+            style={{
+              padding: "16px 20px 14px",
+              borderBottom: "1px solid var(--color-border)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                fontFamily: "var(--font-display)",
+                color: "var(--color-text)",
+              }}
+            >
+              기관별 크레딧
+            </div>
+            <div style={{ fontSize: 13, color: "var(--color-dim)", marginTop: 3 }}>
+              배정 크레딧 현황
+            </div>
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={TABLE_HEADER}>기관명</th>
+                <th style={{ ...TABLE_HEADER, textAlign: "right" }}>총 크레딧</th>
+                <th style={TABLE_HEADER}>프로그램</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ORGANIZATIONS.map((org) => (
+                <tr key={org.id}>
+                  <td style={{ ...TABLE_CELL, fontWeight: 600 }}>{org.name}</td>
+                  <td
+                    style={{
+                      ...TABLE_CELL,
+                      textAlign: "right",
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 700,
+                      color: "#60a5fa",
+                    }}
+                  >
+                    {org.totalCredits.toLocaleString()}C
+                  </td>
+                  <td
+                    style={{
+                      ...TABLE_CELL,
+                      fontSize: 14,
+                      color: "var(--color-dim)",
+                      maxWidth: 160,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {org.programName}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 플랫폼 활동 요약 */}
+      <div
+        style={{
+          ...CARD,
+          padding: "20px 24px",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: "var(--font-display)",
+            color: "var(--color-text)",
+            marginBottom: 16,
+          }}
+        >
+          플랫폼 활동 요약
+        </div>
+        <div
+          style={{
+            display: "flex",
+            gap: 0,
+            borderRadius: 8,
+            overflow: "hidden",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          {[
+            {
+              label: "이번 달 완료 세션",
+              value: `${thisMonthCompleted}건`,
+              color: "#4ade80",
+            },
+            {
+              label: "평균 만족도",
+              value: "4.7 / 5.0",
+              color: "var(--color-accent)",
+            },
+            {
+              label: "Enabler 재요청률",
+              value: `${avgReRequest}%`,
+              color: "#fbbf24",
+            },
+          ].map((item, idx, arr) => (
+            <div
+              key={item.label}
+              style={{
+                flex: 1,
+                padding: "18px 24px",
+                borderRight: idx < arr.length - 1 ? "1px solid var(--color-border)" : "none",
+                background: "var(--color-dark)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 14,
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "var(--color-dim)",
+                  marginBottom: 8,
+                }}
+              >
+                {item.label}
+              </div>
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 700,
+                  fontFamily: "var(--font-display)",
+                  color: item.color,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {item.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

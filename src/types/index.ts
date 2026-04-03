@@ -14,6 +14,9 @@ export type CreditTransactionType =
   | "purchase"
   | "allocate"
   | "use"
+  | "hold"
+  | "confirm"
+  | "release"
   | "refund"
   | "expire";
 
@@ -64,6 +67,23 @@ export interface Booking {
   scheduledAt: string;
   creditsAmount: number;
   brief: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  cancelReason?: string;
+  meetingUrl?: string;
+}
+
+export interface CreditTransaction {
+  id: string;
+  txType: CreditTransactionType;
+  amount: number;
+  orgId?: string;
+  startupId?: string;
+  enablerId?: string;
+  bookingId?: string;
+  description: string;
+  balanceAfter?: number;
+  createdAt: string;
 }
 
 export interface Organization {

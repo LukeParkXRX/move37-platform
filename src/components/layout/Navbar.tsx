@@ -3,7 +3,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const NAV_LINKS = [
+type Role = "startup" | "enabler" | "org_admin" | "super_admin";
+
+const ROLE_LABELS: Record<Role, string> = {
+  startup: "스타트업",
+  enabler: "Enabler",
+  org_admin: "기관 관리자",
+  super_admin: "슈퍼 관리자",
+};
+
+const ROLE_ORDER: Role[] = ["startup", "enabler", "org_admin", "super_admin"];
+
+const GUEST_NAV_LINKS = [
   { label: "Enabler 찾기", href: "/enablers" },
   { label: "프로젝트 등록", href: "/projects/new" },
   { label: "화상채팅", href: "/meeting" },
@@ -11,9 +22,53 @@ const NAV_LINKS = [
   { label: "기업 서비스", href: "/organizations" },
 ];
 
+const ROLE_NAV_LINKS: Record<Role, { label: string; href: string }[]> = {
+  startup: [
+    { label: "Enabler 찾기", href: "/enablers" },
+    { label: "매칭", href: "/matching" },
+    { label: "내 대시보드", href: "/my" },
+    { label: "화상채팅", href: "/meeting" },
+    { label: "인사이트", href: "/insights" },
+  ],
+  enabler: [
+    { label: "내 대시보드", href: "/enabler-dashboard" },
+    { label: "세션 관리", href: "/session" },
+    { label: "화상채팅", href: "/meeting" },
+    { label: "인사이트", href: "/insights" },
+  ],
+  org_admin: [
+    { label: "기관 대시보드", href: "/org/dashboard" },
+    { label: "크레딧 관리", href: "/org/credits" },
+    { label: "세션 이력", href: "/org/dashboard" },
+    { label: "화상채팅", href: "/meeting" },
+    { label: "인사이트", href: "/insights" },
+  ],
+  super_admin: [
+    { label: "관리자 패널", href: "/admin" },
+    { label: "기관 관리", href: "/admin/orgs" },
+    { label: "Enabler 관리", href: "/admin/enablers" },
+    { label: "사용자", href: "/admin/users" },
+    { label: "화상채팅", href: "/meeting" },
+  ],
+};
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Mock auth state — will be replaced with Supabase Auth later
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentRole, setCurrentRole] = useState<Role>("startup");
+
+  // Mock user for display
+  const mockUser = {
+    fullName: "김태호",
+    avatarUrl:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+    role: currentRole,
+  };
+
+  const activeLinks = isLoggedIn ? ROLE_NAV_LINKS[currentRole] : GUEST_NAV_LINKS;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,6 +89,11 @@ export default function Navbar() {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
+
+  const cycleRole = () => {
+    const idx = ROLE_ORDER.indexOf(currentRole);
+    setCurrentRole(ROLE_ORDER[(idx + 1) % ROLE_ORDER.length]);
+  };
 
   return (
     <>
@@ -80,9 +140,9 @@ export default function Navbar() {
 
           {/* 센터 네비 — 데스크탑 */}
           <nav className="hidden md:flex items-center gap-1" aria-label="주요 메뉴">
-            {NAV_LINKS.map((link) => (
+            {activeLinks.map((link) => (
               <Link
-                key={link.href}
+                key={link.href + link.label}
                 href={link.href}
                 className="px-3.5 py-1.5 text-[15px] rounded-md transition-colors duration-150"
                 style={{
@@ -109,47 +169,155 @@ export default function Navbar() {
 
           {/* 우측 액션 — 데스크탑 */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
-            <Link
-              href="/login"
-              className="px-4 py-1.5 text-[15px] rounded-md border transition-colors duration-150"
-              style={{
-                color: "var(--color-dim)",
-                borderColor: "var(--color-border)",
-                backgroundColor: "transparent",
-                fontFamily: "var(--font-body)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.color =
-                  "var(--color-text)";
-                (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                  "var(--color-dim)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.color =
-                  "var(--color-dim)";
-                (e.currentTarget as HTMLAnchorElement).style.borderColor =
-                  "var(--color-border)";
-              }}
-            >
-              로그인
-            </Link>
-            <Link
-              href="/signup"
-              className="px-4 py-1.5 text-[15px] rounded-md font-bold transition-all duration-150"
-              style={{
-                backgroundColor: "var(--color-accent)",
-                color: "oklch(0.1 0 0)",
-                fontFamily: "var(--font-display)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.opacity = "0.88";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.opacity = "1";
-              }}
-            >
-              시작하기
-            </Link>
+            {isLoggedIn ? (
+              <>
+                {/* 개발용 역할 전환 드롭다운 */}
+                <button
+                  onClick={cycleRole}
+                  className="px-2.5 py-1 rounded-md transition-colors duration-150"
+                  style={{
+                    color: "var(--color-muted, oklch(0.45 0 0))",
+                    fontSize: "11px",
+                    fontFamily: "var(--font-body)",
+                    backgroundColor: "transparent",
+                    border: "1px solid var(--color-border)",
+                    cursor: "pointer",
+                    letterSpacing: "0.02em",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color =
+                      "var(--color-dim)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color =
+                      "var(--color-muted, oklch(0.45 0 0))";
+                  }}
+                  title="역할 전환 (개발용)"
+                >
+                  {ROLE_LABELS[currentRole]}
+                </button>
+
+                {/* 유저 아바타 + 이름 */}
+                <div className="flex items-center gap-2">
+                  <img
+                    src={mockUser.avatarUrl}
+                    alt={mockUser.fullName}
+                    width={32}
+                    height={32}
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "1px solid var(--color-border)",
+                    }}
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      target.style.display = "none";
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = "flex";
+                    }}
+                  />
+                  <span
+                    style={{
+                      display: "none",
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      backgroundColor: "var(--color-accent)",
+                      color: "oklch(0.1 0 0)",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontFamily: "var(--font-display)",
+                    }}
+                  >
+                    {mockUser.fullName.charAt(0)}
+                  </span>
+                  <span
+                    style={{
+                      color: "var(--color-dim)",
+                      fontSize: "14px",
+                      fontFamily: "var(--font-body)",
+                    }}
+                  >
+                    {mockUser.fullName}
+                  </span>
+                </div>
+
+                {/* 로그아웃 */}
+                <button
+                  onClick={() => setIsLoggedIn(false)}
+                  className="px-3.5 py-1.5 text-[15px] rounded-md border transition-colors duration-150"
+                  style={{
+                    color: "var(--color-dim)",
+                    borderColor: "var(--color-border)",
+                    backgroundColor: "transparent",
+                    fontFamily: "var(--font-body)",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color =
+                      "var(--color-text)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor =
+                      "var(--color-dim)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color =
+                      "var(--color-dim)";
+                    (e.currentTarget as HTMLButtonElement).style.borderColor =
+                      "var(--color-border)";
+                  }}
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-1.5 text-[15px] rounded-md border transition-colors duration-150"
+                  style={{
+                    color: "var(--color-dim)",
+                    borderColor: "var(--color-border)",
+                    backgroundColor: "transparent",
+                    fontFamily: "var(--font-body)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.color =
+                      "var(--color-text)";
+                    (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                      "var(--color-dim)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.color =
+                      "var(--color-dim)";
+                    (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                      "var(--color-border)";
+                  }}
+                >
+                  로그인
+                </Link>
+                <Link
+                  href="/signup"
+                  className="px-4 py-1.5 text-[15px] rounded-md font-bold transition-all duration-150"
+                  style={{
+                    backgroundColor: "var(--color-accent)",
+                    color: "oklch(0.1 0 0)",
+                    fontFamily: "var(--font-display)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.opacity = "0.88";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.opacity = "1";
+                  }}
+                >
+                  시작하기
+                </Link>
+              </>
+            )}
           </div>
 
           {/* 햄버거 — 모바일 */}
@@ -215,9 +383,62 @@ export default function Navbar() {
           }}
           aria-label="모바일 메뉴"
         >
-          {NAV_LINKS.map((link) => (
+          {/* 로그인 상태 — 유저 정보 헤더 */}
+          {isLoggedIn && (
+            <>
+              <div className="flex items-center gap-3 px-4 py-3">
+                <img
+                  src={mockUser.avatarUrl}
+                  alt={mockUser.fullName}
+                  width={36}
+                  height={36}
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "1px solid var(--color-border)",
+                    flexShrink: 0,
+                  }}
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = "none";
+                  }}
+                />
+                <div>
+                  <p
+                    style={{
+                      color: "var(--color-text)",
+                      fontSize: "14px",
+                      fontFamily: "var(--font-body)",
+                      fontWeight: "600",
+                      margin: 0,
+                    }}
+                  >
+                    {mockUser.fullName}
+                  </p>
+                  <p
+                    style={{
+                      color: "var(--color-dim)",
+                      fontSize: "12px",
+                      fontFamily: "var(--font-body)",
+                      margin: 0,
+                    }}
+                  >
+                    {ROLE_LABELS[currentRole]}
+                  </p>
+                </div>
+              </div>
+              <div
+                className="h-px mx-4 mb-1"
+                style={{ backgroundColor: "var(--color-border)" }}
+              />
+            </>
+          )}
+
+          {activeLinks.map((link) => (
             <Link
-              key={link.href}
+              key={link.href + link.label}
               href={link.href}
               onClick={() => setMenuOpen(false)}
               className="px-4 py-3 text-sm rounded-md transition-colors duration-150"
@@ -235,31 +456,115 @@ export default function Navbar() {
             style={{ backgroundColor: "var(--color-border)" }}
           />
 
-          <Link
-            href="/login"
-            onClick={() => setMenuOpen(false)}
-            className="px-4 py-3 text-sm rounded-md border transition-colors duration-150"
-            style={{
-              color: "var(--color-dim)",
-              borderColor: "var(--color-border)",
-              fontFamily: "var(--font-body)",
-            }}
-          >
-            로그인
-          </Link>
-          <Link
-            href="/signup"
-            onClick={() => setMenuOpen(false)}
-            className="px-4 py-3 text-sm rounded-md font-bold text-center mt-1"
-            style={{
-              backgroundColor: "var(--color-accent)",
-              color: "oklch(0.1 0 0)",
-              fontFamily: "var(--font-display)",
-            }}
-          >
-            시작하기
-          </Link>
+          {isLoggedIn ? (
+            <button
+              onClick={() => {
+                setIsLoggedIn(false);
+                setMenuOpen(false);
+              }}
+              className="px-4 py-3 text-sm rounded-md border text-left transition-colors duration-150"
+              style={{
+                color: "var(--color-dim)",
+                borderColor: "var(--color-border)",
+                fontFamily: "var(--font-body)",
+                backgroundColor: "transparent",
+                cursor: "pointer",
+                width: "100%",
+              }}
+            >
+              로그아웃
+            </button>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="px-4 py-3 text-sm rounded-md border transition-colors duration-150"
+                style={{
+                  color: "var(--color-dim)",
+                  borderColor: "var(--color-border)",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                로그인
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setMenuOpen(false)}
+                className="px-4 py-3 text-sm rounded-md font-bold text-center mt-1"
+                style={{
+                  backgroundColor: "var(--color-accent)",
+                  color: "oklch(0.1 0 0)",
+                  fontFamily: "var(--font-display)",
+                }}
+              >
+                시작하기
+              </Link>
+            </>
+          )}
         </nav>
+      </div>
+
+      {/* 개발용 역할 전환 플로팅 필 */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: "16px",
+          right: "16px",
+          zIndex: 9999,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: "6px",
+        }}
+      >
+        {/* 로그인 토글 */}
+        <button
+          onClick={() => setIsLoggedIn((prev) => !prev)}
+          style={{
+            backgroundColor: "var(--color-card)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "9999px",
+            padding: "4px 12px",
+            fontSize: "11px",
+            fontFamily: "var(--font-body)",
+            color: isLoggedIn ? "var(--color-accent)" : "var(--color-dim)",
+            cursor: "pointer",
+            letterSpacing: "0.02em",
+            transition: "color 150ms",
+          }}
+        >
+          {isLoggedIn ? "로그인됨" : "비로그인"}
+        </button>
+
+        {/* 역할 전환 (로그인 상태일 때만 표시) */}
+        {isLoggedIn && (
+          <button
+            onClick={cycleRole}
+            style={{
+              backgroundColor: "var(--color-card)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "9999px",
+              padding: "4px 12px",
+              fontSize: "11px",
+              fontFamily: "var(--font-body)",
+              color: "var(--color-dim)",
+              cursor: "pointer",
+              letterSpacing: "0.02em",
+              transition: "color 150ms",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color =
+                "var(--color-text)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color =
+                "var(--color-dim)";
+            }}
+          >
+            🔑 {currentRole}
+          </button>
+        )}
       </div>
 
       {/* 56px 상단 여백 보정용 placeholder — 필요한 페이지에서 사용 */}

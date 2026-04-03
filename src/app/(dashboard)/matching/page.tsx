@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import { ENABLERS } from "@/lib/constants/mock-data";
 import type { EnablerBadge } from "@/types";
@@ -124,7 +125,7 @@ function FilterChip({
 
 function StarRating({ value }: { value: number }) {
   return (
-    <span style={{ color: "var(--color-gold)", fontSize: "14px" }}>
+    <span style={{ color: "var(--color-gold)", fontSize: "12px" }}>
       {"★".repeat(Math.floor(value))}
       {value % 1 >= 0.5 ? "½" : ""}
     </span>
@@ -159,6 +160,7 @@ function EnablerCard({
         padding: "20px",
         cursor: "pointer",
         boxShadow: selected ? "0 0 0 1px var(--color-accent)" : "none",
+        animation: "var(--animate-slide-up)",
       }}
       onMouseEnter={(e) => {
         if (!selected) {
@@ -179,27 +181,37 @@ function EnablerCard({
         <img
           src={enabler.avatarUrl}
           alt={enabler.fullName}
-          className="shrink-0 rounded-full object-cover"
-          style={{ width: "120px", height: "120px" }}
+          style={{
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            objectFit: "cover",
+            flexShrink: 0,
+          }}
         />
 
         {/* Name + school */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            <span
+            <Link
+              href={`/enablers/${enabler.userId}`}
+              onClick={(e) => e.stopPropagation()}
               style={{
-                fontSize: "16px",
+                fontSize: "14px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 color: "var(--color-text)",
                 lineHeight: 1.3,
+                textDecoration: "none",
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-accent)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text)")}
             >
               {enabler.fullName}
-            </span>
+            </Link>
             <span
               style={{
-                fontSize: "11px",
+                fontSize: "10px",
                 fontFamily: "var(--font-body)",
                 fontWeight: 600,
                 color: badge.color,
@@ -215,7 +227,7 @@ function EnablerCard({
           </div>
           <p
             style={{
-              fontSize: "13px",
+              fontSize: "12px",
               color: "var(--color-dim)",
               fontFamily: "var(--font-body)",
               lineHeight: 1.4,
@@ -230,7 +242,7 @@ function EnablerCard({
       <p
         className="mb-3"
         style={{
-          fontSize: "14px",
+          fontSize: "13px",
           color: "var(--color-dim)",
           fontFamily: "var(--font-body)",
           lineHeight: 1.6,
@@ -249,13 +261,13 @@ function EnablerCard({
           <span
             key={s}
             style={{
-              fontSize: "12px",
+              fontSize: "10px",
               fontFamily: "var(--font-body)",
               fontWeight: 500,
               color: "var(--color-dim)",
               backgroundColor: "var(--color-dark)",
               border: "1px solid var(--color-border)",
-              padding: "2px 9px",
+              padding: "1px 8px",
               borderRadius: "9999px",
               lineHeight: 1.8,
             }}
@@ -272,7 +284,7 @@ function EnablerCard({
             <StarRating value={enabler.rating} />
             <span
               style={{
-                fontSize: "14px",
+                fontSize: "12px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 color: "var(--color-text)",
@@ -292,7 +304,7 @@ function EnablerCard({
           />
           <span
             style={{
-              fontSize: "13px",
+              fontSize: "12px",
               color: "var(--color-dim)",
               fontFamily: "var(--font-body)",
             }}
@@ -304,7 +316,7 @@ function EnablerCard({
         <div className="flex items-center gap-2 shrink-0">
           <span
             style={{
-              fontSize: "14px",
+              fontSize: "12px",
               fontFamily: "var(--font-display)",
               fontWeight: 700,
               color: "var(--color-text)",
@@ -713,6 +725,7 @@ export default function MatchingPage() {
           {/* Top bar */}
           <div
             className="flex items-center justify-between mb-6"
+            style={{ animation: "var(--animate-fade-in)" }}
           >
             <div className="flex items-center gap-3">
               <h1
@@ -803,6 +816,7 @@ export default function MatchingPage() {
               className="flex flex-col items-center justify-center"
               style={{
                 paddingTop: "80px",
+                animation: "var(--animate-fade-in)",
               }}
             >
               <div
@@ -863,6 +877,10 @@ export default function MatchingPage() {
               {filtered.map((enabler, i) => (
                 <div
                   key={enabler.userId}
+                  style={{
+                    animation: "var(--animate-slide-up)",
+                    animationDelay: `${i * 50}ms`,
+                  }}
                 >
                   <EnablerCard
                     enabler={enabler}

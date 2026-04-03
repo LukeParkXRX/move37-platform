@@ -14,7 +14,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
     <label
       style={{
         display: "block",
-        fontSize: "13px",
+        fontSize: "11px",
         fontFamily: "var(--font-display)",
         fontWeight: 700,
         letterSpacing: "0.09em",
@@ -55,7 +55,7 @@ function FieldInput({
         border: `1px solid ${focused ? "var(--color-accent)" : "var(--color-border)"}`,
         borderRadius: "var(--radius-lg)",
         padding: "10px 14px",
-        fontSize: "16px",
+        fontSize: "14px",
         fontFamily: "var(--font-body)",
         color: "var(--color-text)",
         outline: "none",
@@ -402,7 +402,7 @@ export default function LoginPage() {
         />
 
         {/* ── Top: Logo wordmark ── */}
-        <div style={{ position: "relative", zIndex: 1 }}>
+        <div style={{ position: "relative", zIndex: 1, animation: "var(--animate-fade-in)" }}>
           <div
             style={{
               display: "inline-flex",
@@ -413,8 +413,8 @@ export default function LoginPage() {
             {/* Logo mark — a diagonal arrow in a circle */}
             <div
               style={{
-                width: "64px",
-                height: "64px",
+                width: "32px",
+                height: "32px",
                 borderRadius: "50%",
                 backgroundColor: "var(--color-accent)",
                 display: "flex",
@@ -424,8 +424,8 @@ export default function LoginPage() {
               }}
             >
               <svg
-                width="28"
-                height="28"
+                width="14"
+                height="14"
                 viewBox="0 0 14 14"
                 fill="none"
                 style={{ color: "oklch(0.1 0 0)" }}
@@ -443,7 +443,7 @@ export default function LoginPage() {
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
-                fontSize: "30px",
+                fontSize: "15px",
                 color: "var(--color-text)",
                 letterSpacing: "-0.02em",
               }}
@@ -458,6 +458,8 @@ export default function LoginPage() {
           style={{
             position: "relative",
             zIndex: 1,
+            animation: "var(--animate-slide-up)",
+            animationDelay: "0.1s",
           }}
         >
           {/* Decorative quotation mark */}
@@ -480,7 +482,7 @@ export default function LoginPage() {
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 900,
-              fontSize: "30px",
+              fontSize: "28px",
               lineHeight: 1.35,
               color: "var(--color-text)",
               letterSpacing: "-0.025em",
@@ -520,7 +522,7 @@ export default function LoginPage() {
           {/* Sub-description */}
           <p
             style={{
-              fontSize: "16px",
+              fontSize: "14px",
               fontFamily: "var(--font-body)",
               color: "var(--color-dim)",
               lineHeight: 1.7,
@@ -537,6 +539,8 @@ export default function LoginPage() {
           style={{
             position: "relative",
             zIndex: 1,
+            animation: "var(--animate-slide-up)",
+            animationDelay: "0.2s",
           }}
         >
           {/* Thin divider line */}
@@ -574,22 +578,29 @@ export default function LoginPage() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               {/* Avatar */}
-              <img
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face"
-                alt="testimonial"
+              <div
                 style={{
-                  width: "64px",
-                  height: "64px",
+                  width: "36px",
+                  height: "36px",
                   borderRadius: "50%",
-                  objectFit: "cover",
+                  backgroundColor: "var(--color-accent)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   flexShrink: 0,
+                  fontSize: "12px",
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  color: "oklch(0.1 0 0)",
                 }}
-              />
+              >
+                김
+              </div>
 
               <div>
                 <p
                   style={{
-                    fontSize: "15px",
+                    fontSize: "13px",
                     fontFamily: "var(--font-display)",
                     fontWeight: 700,
                     color: "var(--color-text)",
@@ -600,7 +611,7 @@ export default function LoginPage() {
                 </p>
                 <p
                   style={{
-                    fontSize: "13px",
+                    fontSize: "11px",
                     fontFamily: "var(--font-body)",
                     color: "var(--color-dim)",
                     lineHeight: 1.3,
@@ -615,7 +626,7 @@ export default function LoginPage() {
                 style={{
                   marginLeft: "auto",
                   color: "var(--color-gold)",
-                  fontSize: "14px",
+                  fontSize: "12px",
                   letterSpacing: "1px",
                 }}
               >
@@ -669,6 +680,7 @@ export default function LoginPage() {
           <div
             style={{
               marginBottom: "32px",
+              animation: "var(--animate-fade-in)",
             }}
           >
             <div
@@ -723,13 +735,15 @@ export default function LoginPage() {
           <div
             style={{
               marginBottom: "28px",
+              animation: "var(--animate-slide-up)",
+              animationDelay: "0.05s",
             }}
           >
             <h1
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 800,
-                fontSize: "26px",
+                fontSize: "24px",
                 color: "var(--color-text)",
                 letterSpacing: "-0.03em",
                 lineHeight: 1.2,
@@ -759,6 +773,8 @@ export default function LoginPage() {
               borderRadius: "var(--radius-lg)",
               padding: "3px",
               marginBottom: "28px",
+              animation: "var(--animate-slide-up)",
+              animationDelay: "0.1s",
             }}
           >
             {(
@@ -777,7 +793,7 @@ export default function LoginPage() {
                     flex: 1,
                     padding: "8px 12px",
                     borderRadius: "var(--radius-md)",
-                    fontSize: "15px",
+                    fontSize: "13px",
                     fontFamily: "var(--font-display)",
                     fontWeight: active ? 700 : 500,
                     color: active ? "oklch(0.1 0 0)" : "var(--color-dim)",
@@ -801,7 +817,10 @@ export default function LoginPage() {
           {/* ── Form content — animated tab transition ── */}
           <div
             key={activeTab}
-            style={{}}
+            style={{
+              animation: "var(--animate-slide-up)",
+              animationDuration: "0.28s",
+            }}
           >
             {activeTab === "startup" ? <StartupForm /> : <EnablerForm />}
           </div>
@@ -810,6 +829,8 @@ export default function LoginPage() {
           <div
             style={{
               marginTop: "24px",
+              animation: "var(--animate-slide-up)",
+              animationDelay: "0.15s",
             }}
           >
             <button
@@ -820,7 +841,7 @@ export default function LoginPage() {
                 borderRadius: "var(--radius-lg)",
                 backgroundColor: "var(--color-accent)",
                 color: "oklch(0.1 0 0)",
-                fontSize: "16px",
+                fontSize: "14px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
                 border: "none",
@@ -888,7 +909,7 @@ export default function LoginPage() {
               backgroundColor: "transparent",
               border: "1px solid var(--color-border)",
               color: "var(--color-text)",
-              fontSize: "16px",
+              fontSize: "14px",
               fontFamily: "var(--font-display)",
               fontWeight: 600,
               cursor: "pointer",
@@ -943,7 +964,7 @@ export default function LoginPage() {
             style={{
               textAlign: "center",
               marginTop: "24px",
-              fontSize: "15px",
+              fontSize: "13px",
               fontFamily: "var(--font-body)",
               color: "var(--color-dim)",
             }}
