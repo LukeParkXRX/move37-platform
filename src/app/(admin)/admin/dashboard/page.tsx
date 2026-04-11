@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   ENABLERS,
   BOOKINGS,
@@ -131,6 +132,13 @@ function KPICard({
 }
 
 export default function AdminDashboardPage() {
+  // 알림 배너 계산
+  const pendingEnablers = ENABLERS.filter((e) => e.status === "pending").length;
+  const pendingBookings = BOOKINGS.filter((b) => b.status === "pending").length;
+  const criticalCredits = STARTUP_CREDITS.filter(
+    (c) => c.allocated > 0 && c.used / c.allocated >= 0.9
+  );
+
   // KPI 계산
   const totalUsers = MOCK_USERS.length;
   const activeEnablers = ENABLERS.filter((e) => e.status === "approved").length;
@@ -179,6 +187,83 @@ export default function AdminDashboardPage() {
           전체 현황을 확인하세요
         </p>
       </div>
+
+      {/* Alert Banners */}
+      {(pendingEnablers > 0 || pendingBookings > 0 || criticalCredits.length > 0) && (
+        <div style={{ marginBottom: 20 }}>
+          {pendingEnablers > 0 && (
+            <div
+              style={{
+                padding: "12px 16px",
+                borderRadius: "var(--radius-lg)",
+                border: "1px solid oklch(0.75 0.15 85 / 0.3)",
+                backgroundColor: "oklch(0.75 0.15 85 / 0.05)",
+                color: "oklch(0.75 0.15 85)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: "13px",
+                fontFamily: "var(--font-body)",
+                marginBottom: "8px",
+              }}
+            >
+              <span>⏳ {pendingEnablers}명의 Enabler가 심사 대기 중입니다</span>
+              <Link
+                href="/admin/enablers"
+                style={{
+                  color: "oklch(0.75 0.15 85)",
+                  textDecoration: "none",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  fontFamily: "var(--font-display)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                심사하기 →
+              </Link>
+            </div>
+          )}
+          {pendingBookings > 0 && (
+            <div
+              style={{
+                padding: "12px 16px",
+                borderRadius: "var(--radius-lg)",
+                border: "1px solid oklch(0.75 0.15 85 / 0.3)",
+                backgroundColor: "oklch(0.75 0.15 85 / 0.05)",
+                color: "oklch(0.75 0.15 85)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: "13px",
+                fontFamily: "var(--font-body)",
+                marginBottom: "8px",
+              }}
+            >
+              <span>📋 {pendingBookings}건의 예약이 확인 대기 중입니다</span>
+            </div>
+          )}
+          {criticalCredits.map((c) => (
+            <div
+              key={c.name}
+              style={{
+                padding: "12px 16px",
+                borderRadius: "var(--radius-lg)",
+                border: "1px solid oklch(0.65 0.2 25 / 0.3)",
+                backgroundColor: "oklch(0.65 0.2 25 / 0.05)",
+                color: "oklch(0.65 0.2 25)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: "13px",
+                fontFamily: "var(--font-body)",
+                marginBottom: "8px",
+              }}
+            >
+              <span>⚠️ {c.name}의 크레딧이 90% 이상 소진되었습니다</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div

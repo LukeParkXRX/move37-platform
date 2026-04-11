@@ -58,10 +58,14 @@ export default function Footer() {
               검증된 MBA Enabler와 직접 연결됩니다.
             </p>
             <div className="flex items-center gap-2.5 mt-6">
-              {[{ label: "LinkedIn", icon: "in" }, { label: "X", icon: "𝕏" }, { label: "이메일", icon: "@" }].map((s) => (
+              {[
+                { label: "LinkedIn", icon: "in", href: "https://linkedin.com/company/move37" },
+                { label: "X", icon: "𝕏", href: "https://x.com/move37_io" },
+                { label: "이메일", icon: "@", href: "mailto:hello@move37.io" },
+              ].map((s) => (
                 <a
                   key={s.label}
-                  href="#"
+                  href={s.href}
                   aria-label={s.label}
                   className="w-8 h-8 flex items-center justify-center rounded-md text-xs font-bold transition-all duration-200 hover:border-accent hover:text-accent"
                   style={{
@@ -104,9 +108,14 @@ export default function Footer() {
         <div className="h-px mb-6" style={{ backgroundColor: "var(--color-border)" }} />
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <p className="text-xs" style={{ color: "var(--color-dim)" }}>
-            © 2026 Move 37. All rights reserved.
-          </p>
+          <div>
+            <p className="text-xs" style={{ color: "var(--color-dim)" }}>
+              © {new Date().getFullYear()} Move 37. All rights reserved.
+            </p>
+            <p className="text-xs" style={{ color: "var(--color-dim)", marginTop: 4 }}>
+              (주)엑스알엑스 | 대표: 박규현 | 사업자등록번호: 000-00-00000 | 서울특별시 강남구
+            </p>
+          </div>
           <div className="flex items-center gap-5">
             {[
               { label: "개인정보처리방침", href: "/privacy" },

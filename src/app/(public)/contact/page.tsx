@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import Link from "next/link";
+import { useToast } from "@/components/ui";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -34,7 +36,61 @@ const inputStyle: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
+const errorStyle: React.CSSProperties = {
+  color: "oklch(0.65 0.2 25)",
+  fontSize: 12,
+  marginTop: 4,
+};
+
 export default function ContactPage() {
+  const { success } = useToast();
+
+  const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [type, setType] = useState("");
+  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    const newErrors: Record<string, string> = {};
+
+    if (!name.trim()) newErrors.name = "이름을 입력해 주세요";
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "유효한 이메일을 입력해 주세요";
+    }
+    if (!type) newErrors.type = "문의 유형을 선택해 주세요";
+    if (!message.trim() || message.trim().length < 10) {
+      newErrors.message = "문의 내용을 10자 이상 입력해 주세요";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+    setIsSubmitting(true);
+    await new Promise((r) => setTimeout(r, 1500));
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    success("문의가 접수되었습니다. 24시간 내 답변 드리겠습니다.");
+  }
+
+  function handleReset() {
+    setName("");
+    setCompany("");
+    setEmail("");
+    setType("");
+    setMessage("");
+    setErrors({});
+    setIsSubmitted(false);
+  }
+
   return (
     <>
       <Navbar />
@@ -69,7 +125,7 @@ export default function ContactPage() {
               margin: "0 auto",
               padding: "0 24px",
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
               gap: 48,
               alignItems: "start",
             }}
@@ -79,107 +135,169 @@ export default function ContactPage() {
               <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text)", marginBottom: 24 }}>
                 문의 양식
               </h2>
-              <form onSubmit={(e) => e.preventDefault()} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                {/* 문의 유형 */}
-                <div>
-                  <label style={labelStyle}>문의 유형</label>
-                  <div style={{ position: "relative" }}>
-                    <select
+
+              {isSubmitted ? (
+                <div
+                  style={{
+                    background: "var(--color-card)",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: 20,
+                    padding: 40,
+                    textAlign: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: "50%",
+                      background: "oklch(0.72 0.18 150 / 0.15)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      margin: "0 auto 20px",
+                      fontSize: 28,
+                      color: "oklch(0.72 0.18 150)",
+                    }}
+                  >
+                    ✓
+                  </div>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text)", marginBottom: 12 }}>
+                    문의가 접수되었습니다
+                  </h3>
+                  <p style={{ fontSize: 14, color: "var(--color-dim)", lineHeight: 1.7, marginBottom: 28 }}>
+                    24시간 내 이메일로 답변 드리겠습니다.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="landing-btn-primary"
+                    style={{ justifyContent: "center" }}
+                  >
+                    새 문의하기
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                  {/* 문의 유형 */}
+                  <div>
+                    <label style={labelStyle}>문의 유형</label>
+                    <div style={{ position: "relative" }}>
+                      <select
+                        style={{
+                          ...inputStyle,
+                          appearance: "none",
+                          cursor: "pointer",
+                        }}
+                        value={type}
+                        onChange={(e) => setType(e.target.value)}
+                      >
+                        <option value="" disabled>선택해 주세요</option>
+                        <option value="startup">스타트업 — 서비스 이용 문의</option>
+                        <option value="b2b">기관 — B2B 도입 문의</option>
+                        <option value="enabler">Enabler — 등록 및 활동 문의</option>
+                        <option value="partnership">파트너십 / 제휴</option>
+                        <option value="other">기타</option>
+                      </select>
+                      <span
+                        style={{
+                          position: "absolute",
+                          right: 16,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          pointerEvents: "none",
+                          color: "var(--color-dim)",
+                          fontSize: 12,
+                        }}
+                      >
+                        ▾
+                      </span>
+                    </div>
+                    {errors.type && <p style={errorStyle}>{errors.type}</p>}
+                  </div>
+
+                  {/* 이름 + 소속 */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 16 }}>
+                    <div>
+                      <label style={labelStyle}>이름</label>
+                      <input
+                        type="text"
+                        placeholder="홍길동"
+                        style={inputStyle}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.4)")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
+                      />
+                      {errors.name && <p style={errorStyle}>{errors.name}</p>}
+                    </div>
+                    <div>
+                      <label style={labelStyle}>소속 / 회사</label>
+                      <input
+                        type="text"
+                        placeholder="Move 37 Inc."
+                        style={inputStyle}
+                        value={company}
+                        onChange={(e) => setCompany(e.target.value)}
+                        onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.4)")}
+                        onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 이메일 */}
+                  <div>
+                    <label style={labelStyle}>이메일</label>
+                    <input
+                      type="email"
+                      placeholder="hello@example.com"
+                      style={inputStyle}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.4)")}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
+                    />
+                    {errors.email && <p style={errorStyle}>{errors.email}</p>}
+                  </div>
+
+                  {/* 문의 내용 */}
+                  <div>
+                    <label style={labelStyle}>문의 내용</label>
+                    <textarea
+                      placeholder="궁금한 점이나 제안 사항을 자유롭게 작성해 주세요."
                       style={{
                         ...inputStyle,
-                        appearance: "none",
-                        cursor: "pointer",
+                        minHeight: 140,
+                        resize: "vertical",
                       }}
-                      defaultValue=""
-                    >
-                      <option value="" disabled>선택해 주세요</option>
-                      <option value="startup">스타트업 — 서비스 이용 문의</option>
-                      <option value="b2b">기관 — B2B 도입 문의</option>
-                      <option value="enabler">Enabler — 등록 및 활동 문의</option>
-                      <option value="partnership">파트너십 / 제휴</option>
-                      <option value="other">기타</option>
-                    </select>
-                    <span
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.4)")}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
+                    />
+                    {errors.message && <p style={errorStyle}>{errors.message}</p>}
+                  </div>
+
+                  {/* Submit */}
+                  <div>
+                    <button
+                      type="submit"
+                      className="landing-btn-primary"
+                      disabled={isSubmitting}
                       style={{
-                        position: "absolute",
-                        right: 16,
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        pointerEvents: "none",
-                        color: "var(--color-dim)",
-                        fontSize: 12,
+                        width: "100%",
+                        justifyContent: "center",
+                        opacity: isSubmitting ? 0.6 : 1,
                       }}
                     >
-                      ▾
-                    </span>
+                      {isSubmitting ? "전송 중..." : "문의 보내기 →"}
+                    </button>
+                    <p style={{ textAlign: "center", fontSize: 12, color: "var(--color-dim)", marginTop: 12 }}>
+                      24시간 내 이메일로 답변드립니다.
+                    </p>
                   </div>
-                </div>
-
-                {/* 이름 + 소속 */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                  <div>
-                    <label style={labelStyle}>이름</label>
-                    <input
-                      type="text"
-                      placeholder="홍길동"
-                      style={inputStyle}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.4)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
-                    />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>소속 / 회사</label>
-                    <input
-                      type="text"
-                      placeholder="Move 37 Inc."
-                      style={inputStyle}
-                      onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.4)")}
-                      onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
-                    />
-                  </div>
-                </div>
-
-                {/* 이메일 */}
-                <div>
-                  <label style={labelStyle}>이메일</label>
-                  <input
-                    type="email"
-                    placeholder="hello@example.com"
-                    style={inputStyle}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.4)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
-                  />
-                </div>
-
-                {/* 문의 내용 */}
-                <div>
-                  <label style={labelStyle}>문의 내용</label>
-                  <textarea
-                    placeholder="궁금한 점이나 제안 사항을 자유롭게 작성해 주세요."
-                    style={{
-                      ...inputStyle,
-                      minHeight: 140,
-                      resize: "vertical",
-                    }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(200,255,0,0.4)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
-                  />
-                </div>
-
-                {/* Submit */}
-                <div>
-                  <button
-                    type="submit"
-                    className="landing-btn-primary"
-                    style={{ width: "100%", justifyContent: "center" }}
-                  >
-                    문의 보내기 →
-                  </button>
-                  <p style={{ textAlign: "center", fontSize: 12, color: "var(--color-dim)", marginTop: 12 }}>
-                    24시간 내 이메일로 답변드립니다.
-                  </p>
-                </div>
-              </form>
+                </form>
+              )}
             </div>
 
             {/* Right Column - Contact Info */}
@@ -267,8 +385,10 @@ export default function ContactPage() {
                     기관 B2B 도입을 검토 중이시면 바로 미팅을 잡으세요. 30분 이내로 구체적인 제안을 드립니다.
                   </p>
                   <button
+                    type="button"
                     className="landing-btn-primary"
                     style={{ marginTop: 16, fontSize: 13, padding: "10px 20px" }}
+                    onClick={() => success("미팅 일정 기능은 준비 중입니다. 이메일로 문의해 주세요.")}
                   >
                     미팅 일정 잡기
                   </button>

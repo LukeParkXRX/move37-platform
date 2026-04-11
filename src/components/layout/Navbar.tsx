@@ -5,14 +5,6 @@ import Link from "next/link";
 
 type Role = "startup" | "enabler" | "org_admin" | "super_admin";
 
-const ROLE_LABELS: Record<Role, string> = {
-  startup: "스타트업",
-  enabler: "Enabler",
-  org_admin: "기관 관리자",
-  super_admin: "슈퍼 관리자",
-};
-
-const ROLE_ORDER: Role[] = ["startup", "enabler", "org_admin", "super_admin"];
 
 const GUEST_NAV_LINKS = [
   { label: "Enabler 찾기", href: "/enablers" },
@@ -58,7 +50,7 @@ export default function Navbar() {
 
   // Mock auth state — will be replaced with Supabase Auth later
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentRole, setCurrentRole] = useState<Role>("startup");
+  const [currentRole] = useState<Role>("startup");
 
   // Mock user for display
   const mockUser = {
@@ -89,11 +81,6 @@ export default function Navbar() {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
-
-  const cycleRole = () => {
-    const idx = ROLE_ORDER.indexOf(currentRole);
-    setCurrentRole(ROLE_ORDER[(idx + 1) % ROLE_ORDER.length]);
-  };
 
   return (
     <>
@@ -171,32 +158,6 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2 shrink-0">
             {isLoggedIn ? (
               <>
-                {/* 개발용 역할 전환 드롭다운 */}
-                <button
-                  onClick={cycleRole}
-                  className="px-2.5 py-1 rounded-md transition-colors duration-150"
-                  style={{
-                    color: "var(--color-muted, oklch(0.45 0 0))",
-                    fontSize: "11px",
-                    fontFamily: "var(--font-body)",
-                    backgroundColor: "transparent",
-                    border: "1px solid var(--color-border)",
-                    cursor: "pointer",
-                    letterSpacing: "0.02em",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.color =
-                      "var(--color-dim)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.color =
-                      "var(--color-muted, oklch(0.45 0 0))";
-                  }}
-                  title="역할 전환 (개발용)"
-                >
-                  {ROLE_LABELS[currentRole]}
-                </button>
-
                 {/* 유저 아바타 + 이름 */}
                 <div className="flex items-center gap-2">
                   <img
@@ -425,7 +386,7 @@ export default function Navbar() {
                       margin: 0,
                     }}
                   >
-                    {ROLE_LABELS[currentRole]}
+                    {currentRole === "startup" ? "스타트업" : currentRole === "enabler" ? "Enabler" : currentRole === "org_admin" ? "기관 관리자" : "관리자"}
                   </p>
                 </div>
               </div>
@@ -505,67 +466,6 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* 개발용 역할 전환 플로팅 필 */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: "16px",
-          right: "16px",
-          zIndex: 9999,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: "6px",
-        }}
-      >
-        {/* 로그인 토글 */}
-        <button
-          onClick={() => setIsLoggedIn((prev) => !prev)}
-          style={{
-            backgroundColor: "var(--color-card)",
-            border: "1px solid var(--color-border)",
-            borderRadius: "9999px",
-            padding: "4px 12px",
-            fontSize: "11px",
-            fontFamily: "var(--font-body)",
-            color: isLoggedIn ? "var(--color-accent)" : "var(--color-dim)",
-            cursor: "pointer",
-            letterSpacing: "0.02em",
-            transition: "color 150ms",
-          }}
-        >
-          {isLoggedIn ? "로그인됨" : "비로그인"}
-        </button>
-
-        {/* 역할 전환 (로그인 상태일 때만 표시) */}
-        {isLoggedIn && (
-          <button
-            onClick={cycleRole}
-            style={{
-              backgroundColor: "var(--color-card)",
-              border: "1px solid var(--color-border)",
-              borderRadius: "9999px",
-              padding: "4px 12px",
-              fontSize: "11px",
-              fontFamily: "var(--font-body)",
-              color: "var(--color-dim)",
-              cursor: "pointer",
-              letterSpacing: "0.02em",
-              transition: "color 150ms",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color =
-                "var(--color-text)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color =
-                "var(--color-dim)";
-            }}
-          >
-            🔑 {currentRole}
-          </button>
-        )}
-      </div>
 
       {/* 56px 상단 여백 보정용 placeholder — 필요한 페이지에서 사용 */}
       {/* <div style={{ height: "56px" }} /> */}

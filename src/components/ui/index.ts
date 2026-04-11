@@ -12,3 +12,10 @@ export type { SkeletonProps, SkeletonVariant } from "./Skeleton";
 
 export { Badge } from "./Badge";
 export type { BadgeProps, BadgeVariant, BadgeSize } from "./Badge";
+
+export { ToastProvider, useToast } from "./Toast";
+
+export { ConfirmDialog } from "./ConfirmDialog";
+export type { ConfirmDialogProps, ConfirmVariant } from "./ConfirmDialog";
+
+export { Pagination } from "./Pagination";

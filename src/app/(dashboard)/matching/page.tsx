@@ -870,7 +870,7 @@ export default function MatchingPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
                 gap: "16px",
               }}
             >

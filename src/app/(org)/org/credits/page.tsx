@@ -6,6 +6,7 @@ import {
   STARTUP_CREDITS,
   CREDIT_TRANSACTIONS,
 } from "@/lib/constants/mock-data";
+import { useToast, Pagination } from "@/components/ui";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -153,10 +154,20 @@ function KpiCard({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function OrgCreditsPage() {
+  const { info } = useToast();
   const [selectedStartupIndex, setSelectedStartupIndex] = useState<
     number | null
   >(null);
   const [allocateAmount, setAllocateAmount] = useState("");
+  const [txPage, setTxPage] = useState(1);
+  const TX_PAGE_SIZE = 5;
+
+  const reversedTransactions = [...CREDIT_TRANSACTIONS].reverse();
+  const pagedTransactions = reversedTransactions.slice(
+    (txPage - 1) * TX_PAGE_SIZE,
+    txPage * TX_PAGE_SIZE
+  );
+  const txTotalPages = Math.ceil(reversedTransactions.length / TX_PAGE_SIZE);
 
   const org = ORGANIZATIONS[0];
 
@@ -181,7 +192,7 @@ export default function OrgCreditsPage() {
   }
 
   function handleAllocateConfirm() {
-    alert("백엔드 연동 후 배분됩니다");
+    info("백엔드 연동 후 배분됩니다");
     setSelectedStartupIndex(null);
     setAllocateAmount("");
   }
@@ -250,7 +261,7 @@ export default function OrgCreditsPage() {
           onMouseLeave={(e) =>
             ((e.currentTarget as HTMLButtonElement).style.opacity = "1")
           }
-          onClick={() => alert("백엔드 연동 후 구매 기능이 제공됩니다")}
+          onClick={() => info("백엔드 연동 후 구매 기능이 제공됩니다")}
         >
           크레딧 구매
         </button>
@@ -260,7 +271,7 @@ export default function OrgCreditsPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
           gap: "16px",
           marginBottom: "28px",
         }}
@@ -759,7 +770,7 @@ export default function OrgCreditsPage() {
 
         {/* Transaction list */}
         <div style={{ padding: "4px 0" }}>
-          {[...CREDIT_TRANSACTIONS].reverse().map((tx, i) => {
+          {pagedTransactions.map((tx, i) => {
             const txType = tx.txType as TxType;
             const typeLabel = TX_TYPE_LABEL[txType] ?? tx.txType;
             const typeColor = TX_TYPE_COLOR[txType] ?? "var(--color-dim)";
@@ -774,7 +785,7 @@ export default function OrgCreditsPage() {
                   justifyContent: "space-between",
                   padding: "14px 20px",
                   borderBottom:
-                    i < CREDIT_TRANSACTIONS.length - 1
+                    i < pagedTransactions.length - 1
                       ? "1px solid var(--color-border)"
                       : "none",
                   transition: "background-color 0.1s",
@@ -871,6 +882,7 @@ export default function OrgCreditsPage() {
             );
           })}
         </div>
+        <Pagination currentPage={txPage} totalPages={txTotalPages} onPageChange={setTxPage} />
       </div>
     </div>
   );

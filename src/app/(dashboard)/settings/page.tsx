@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { MOCK_CURRENT_USER } from "@/lib/constants/mock-data";
+import { useToast, ConfirmDialog } from "@/components/ui";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -167,6 +168,8 @@ const inputDisabledStyle: React.CSSProperties = {
 
 export default function SettingsPage() {
   const user = MOCK_CURRENT_USER;
+  const { info } = useToast();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const [form, setForm] = useState<FormState>({
     fullName: user.fullName,
@@ -188,7 +191,7 @@ export default function SettingsPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    alert("백엔드 연동 후 저장됩니다");
+    info("백엔드 연동 후 저장됩니다");
   }
 
   function handleCancel() {
@@ -667,7 +670,7 @@ export default function SettingsPage() {
                       (e.currentTarget as HTMLButtonElement).style.borderColor =
                         "var(--color-border)";
                     }}
-                    onClick={() => alert("백엔드 연동 후 이용 가능합니다")}
+                    onClick={() => info("백엔드 연동 후 이용 가능합니다")}
                   >
                     비밀번호 변경
                   </button>
@@ -703,9 +706,7 @@ export default function SettingsPage() {
                         (e.currentTarget as HTMLButtonElement).style.backgroundColor =
                           "transparent";
                       }}
-                      onClick={() =>
-                        alert("계정 삭제는 고객센터에 문의해 주세요. 삭제 시 모든 데이터가 영구 삭제됩니다.")
-                      }
+                      onClick={() => setDeleteConfirmOpen(true)}
                     >
                       계정 삭제
                     </button>
@@ -776,6 +777,17 @@ export default function SettingsPage() {
           </div>
         </form>
       </main>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={() => info("계정 삭제는 고객센터에 문의해 주세요")}
+        title="계정 삭제"
+        message="계정 삭제 시 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다. 삭제하시겠습니까?"
+        confirmText="삭제 요청"
+        cancelText="취소"
+        variant="danger"
+      />
     </div>
   );
 }

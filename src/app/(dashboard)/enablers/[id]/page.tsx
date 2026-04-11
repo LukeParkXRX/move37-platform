@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import { ENABLERS, REVIEWS, INSIGHTS } from "@/lib/constants/mock-data";
@@ -133,8 +133,9 @@ function StarRow({ rating }: { rating: number }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
-export default function EnablerProfilePage() {
-  const enabler = ENABLERS[0];
+export default function EnablerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const enabler = ENABLERS.find(e => e.userId === id) || ENABLERS[0];
   const reviews = REVIEWS.filter((r) => r.targetId === enabler.userId);
   const insights = INSIGHTS.filter((i) => i.authorId === enabler.userId);
 

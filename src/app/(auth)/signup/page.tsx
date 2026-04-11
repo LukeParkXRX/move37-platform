@@ -72,21 +72,265 @@ function FieldInput({
   );
 }
 
+function FieldSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { label: string; value: string }[];
+  placeholder?: string;
+}) {
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <div style={{ position: "relative" }}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: "100%",
+          appearance: "none",
+          WebkitAppearance: "none",
+          backgroundColor: "oklch(0.14 0.005 280 / 0.6)",
+          border: `1px solid ${focused ? "var(--color-accent)" : "var(--color-border)"}`,
+          borderRadius: "var(--radius-lg)",
+          padding: "10px 36px 10px 14px",
+          fontSize: "14px",
+          fontFamily: "var(--font-body)",
+          color: value ? "var(--color-text)" : "var(--color-dim)",
+          outline: "none",
+          cursor: "pointer",
+          transition: "border-color 0.18s ease, box-shadow 0.18s ease",
+          boxShadow: focused
+            ? "0 0 0 3px oklch(0.91 0.2 110 / 0.08)"
+            : "none",
+          boxSizing: "border-box",
+        }}
+      >
+        {placeholder && (
+          <option value="" disabled style={{ color: "var(--color-dim)", backgroundColor: "var(--color-dark)" }}>
+            {placeholder}
+          </option>
+        )}
+        {options.map((opt) => (
+          <option
+            key={opt.value}
+            value={opt.value}
+            style={{ backgroundColor: "var(--color-dark)", color: "var(--color-text)" }}
+          >
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <svg
+        style={{
+          position: "absolute",
+          right: "12px",
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: "12px",
+          height: "12px",
+          color: "var(--color-dim)",
+          pointerEvents: "none",
+        }}
+        viewBox="0 0 12 12"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M2 4l4 4 4-4" />
+      </svg>
+    </div>
+  );
+}
+
+// ── Startup Form ───────────────────────────────────────────────────────────────
+
+function StartupForm() {
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [password, setPassword] = useState("");
+
+  const INDUSTRY_OPTIONS = [
+    { label: "SaaS", value: "saas" },
+    { label: "Fintech", value: "fintech" },
+    { label: "E-commerce", value: "ecommerce" },
+    { label: "Healthcare", value: "healthcare" },
+    { label: "AI / DeepTech", value: "ai_deeptech" },
+    { label: "Other", value: "other" },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+        <div>
+          <FieldLabel>이름</FieldLabel>
+          <FieldInput placeholder="홍길동" value={name} onChange={setName} required />
+        </div>
+        <div>
+          <FieldLabel>직함</FieldLabel>
+          <FieldInput placeholder="CEO, CTO, ..." value={title} onChange={setTitle} />
+        </div>
+      </div>
+
+      <div>
+        <FieldLabel>회사명</FieldLabel>
+        <FieldInput placeholder="Acme Corp" value={company} onChange={setCompany} required />
+      </div>
+
+      <div>
+        <FieldLabel>이메일</FieldLabel>
+        <FieldInput type="email" placeholder="you@company.com" value={email} onChange={setEmail} required />
+      </div>
+
+      <div>
+        <FieldLabel>산업군</FieldLabel>
+        <FieldSelect
+          value={industry}
+          onChange={setIndustry}
+          options={INDUSTRY_OPTIONS}
+          placeholder="산업군 선택"
+        />
+      </div>
+
+      <div>
+        <FieldLabel>비밀번호</FieldLabel>
+        <FieldInput type="password" placeholder="8자 이상" value={password} onChange={setPassword} required />
+      </div>
+    </div>
+  );
+}
+
+// ── Enabler Form ───────────────────────────────────────────────────────────────
+
+const SPECIALTY_OPTIONS = [
+  "B2B SaaS",
+  "Fintech",
+  "E-commerce",
+  "Healthcare",
+  "AI / DeepTech",
+  "Business Development",
+  "Legal & Compliance",
+  "Marketing & Growth",
+];
+
+const DEGREE_OPTIONS = [
+  { label: "MBA", value: "mba" },
+  { label: "MS / Engineering", value: "ms_eng" },
+  { label: "JD", value: "jd" },
+  { label: "PhD", value: "phd" },
+  { label: "Undergraduate", value: "undergrad" },
+];
+
+function EnablerForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [degree, setDegree] = useState("");
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [linkedin, setLinkedin] = useState("");
+
+  function toggleSpecialty(s: string) {
+    setSpecialties((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+        <div>
+          <FieldLabel>이름</FieldLabel>
+          <FieldInput placeholder="Jane Smith" value={name} onChange={setName} required />
+        </div>
+        <div>
+          <FieldLabel>학위 유형</FieldLabel>
+          <FieldSelect
+            value={degree}
+            onChange={setDegree}
+            options={DEGREE_OPTIONS}
+            placeholder="학위 선택"
+          />
+        </div>
+      </div>
+
+      <div>
+        <FieldLabel>대학 이메일 (.edu)</FieldLabel>
+        <FieldInput
+          type="email"
+          placeholder="j.smith@stanford.edu"
+          value={email}
+          onChange={setEmail}
+          required
+        />
+      </div>
+
+      <div>
+        <FieldLabel>전문 분야 (복수 선택)</FieldLabel>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "7px", marginTop: "2px" }}>
+          {SPECIALTY_OPTIONS.map((s) => {
+            const active = specialties.includes(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => toggleSpecialty(s)}
+                style={{
+                  padding: "4px 11px",
+                  borderRadius: "var(--radius-full)",
+                  fontSize: "12px",
+                  fontFamily: "var(--font-body)",
+                  fontWeight: active ? 600 : 400,
+                  border: `1px solid ${active ? "var(--color-accent)" : "var(--color-border)"}`,
+                  backgroundColor: active
+                    ? "oklch(0.91 0.2 110 / 0.1)"
+                    : "oklch(0.14 0.005 280 / 0.5)",
+                  color: active ? "var(--color-accent)" : "var(--color-dim)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  lineHeight: 1.6,
+                }}
+              >
+                {s}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <FieldLabel>LinkedIn URL</FieldLabel>
+        <FieldInput
+          placeholder="linkedin.com/in/janesmith"
+          value={linkedin}
+          onChange={setLinkedin}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [activeTab, setActiveTab] = useState<TabMode>("startup");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: 로그인 로직 연결
+    // TODO: 회원가입 로직 연결
   }
 
   return (
     <>
-      {/* 반응형: 모바일에서 왼쪽 패널 숨김 */}
       <style>{`
         @media (max-width: 767px) {
           .auth-left-panel { display: none !important; }
@@ -131,7 +375,6 @@ export default function LoginPage() {
             }}
           />
 
-          {/* Subtle gradient */}
           <div
             style={{
               position: "absolute",
@@ -143,7 +386,6 @@ export default function LoginPage() {
             }}
           />
 
-          {/* Accent glow — bottom left */}
           <div
             style={{
               position: "absolute",
@@ -342,7 +584,7 @@ export default function LoginPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════
-            RIGHT HALF — Login form panel
+            RIGHT HALF — Signup form panel
         ═══════════════════════════════════════════════════════════ */}
         <div
           style={{
@@ -356,7 +598,6 @@ export default function LoginPage() {
             position: "relative",
           }}
         >
-          {/* Subtle top-right glow */}
           <div
             style={{
               position: "absolute",
@@ -416,10 +657,10 @@ export default function LoginPage() {
                   marginBottom: "6px",
                 }}
               >
-                로그인
+                계정 만들기
               </h1>
               <p style={{ fontSize: "14px", fontFamily: "var(--font-body)", color: "var(--color-dim)", lineHeight: 1.5 }}>
-                계정에 로그인하세요.
+                미국 시장 진출의 첫 걸음을 시작하세요.
               </p>
             </div>
 
@@ -471,63 +712,49 @@ export default function LoginPage() {
               })}
             </div>
 
-            {/* ── Login form ── */}
-            <form
-              onSubmit={handleSubmit}
-              style={{ animation: "var(--animate-slide-up)", animationDuration: "0.28s" }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginBottom: "24px" }}>
-                <div>
-                  <FieldLabel>이메일</FieldLabel>
-                  <FieldInput
-                    type="email"
-                    placeholder="you@company.com"
-                    value={email}
-                    onChange={setEmail}
-                    required
-                  />
-                </div>
-                <div>
-                  <FieldLabel>비밀번호</FieldLabel>
-                  <FieldInput
-                    type="password"
-                    placeholder="비밀번호 입력"
-                    value={password}
-                    onChange={setPassword}
-                    required
-                  />
-                </div>
+            {/* ── Form content ── */}
+            <form onSubmit={handleSubmit}>
+              <div
+                key={activeTab}
+                style={{
+                  animation: "var(--animate-slide-up)",
+                  animationDuration: "0.28s",
+                }}
+              >
+                {activeTab === "startup" ? <StartupForm /> : <EnablerForm />}
               </div>
 
               {/* ── Submit button ── */}
-              <button
-                type="submit"
-                style={{
-                  width: "100%",
-                  padding: "13px 20px",
-                  borderRadius: "var(--radius-lg)",
-                  backgroundColor: "var(--color-accent)",
-                  color: "oklch(0.1 0 0)",
-                  fontSize: "14px",
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 700,
-                  border: "none",
-                  cursor: "pointer",
-                  letterSpacing: "-0.01em",
-                  transition: "opacity 0.15s ease, transform 0.15s ease",
-                  boxShadow: "var(--shadow-accent)",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                }}
-              >
-                로그인
-              </button>
+              <div style={{ marginTop: "24px", animation: "var(--animate-slide-up)", animationDelay: "0.15s" }}>
+                <button
+                  type="submit"
+                  style={{
+                    width: "100%",
+                    padding: "13px 20px",
+                    borderRadius: "var(--radius-lg)",
+                    backgroundColor: "var(--color-accent)",
+                    color: "oklch(0.1 0 0)",
+                    fontSize: "14px",
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    letterSpacing: "-0.01em",
+                    transition: "opacity 0.15s ease, transform 0.15s ease",
+                    boxShadow: "var(--shadow-accent)",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                  }}
+                >
+                  {activeTab === "startup" ? "스타트업으로 시작하기" : "Enabler로 등록하기"}
+                </button>
+              </div>
             </form>
 
             {/* ── Divider ── */}
@@ -539,7 +766,7 @@ export default function LoginPage() {
               <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
             </div>
 
-            {/* ── Google login button ── */}
+            {/* ── Google signup button ── */}
             <button
               type="button"
               style={{
@@ -587,9 +814,9 @@ export default function LoginPage() {
                 color: "var(--color-dim)",
               }}
             >
-              계정이 없으신가요?{" "}
+              이미 계정이 있으신가요?{" "}
               <Link
-                href="/signup"
+                href="/login"
                 style={{
                   color: "var(--color-accent)",
                   fontWeight: 600,
@@ -599,7 +826,7 @@ export default function LoginPage() {
                 onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.75")}
                 onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")}
               >
-                회원가입
+                로그인
               </Link>
             </p>
           </div>

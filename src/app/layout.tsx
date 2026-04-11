@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ToastProvider } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Move 37 — 한국 스타트업의 미국 진출 파트너",
@@ -26,7 +27,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+          <ToastProvider>{children}</ToastProvider>
+        </body>
     </html>
   );
 }

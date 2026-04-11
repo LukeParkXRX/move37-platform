@@ -288,7 +288,7 @@ export default function MyDashboardPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
             gap: "16px",
             marginBottom: "32px",
           }}
@@ -315,7 +315,7 @@ export default function MyDashboardPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
             gap: "24px",
             marginBottom: "32px",
           }}
@@ -685,7 +685,7 @@ export default function MyDashboardPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
               gap: "16px",
             }}
           >

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { ENABLERS } from "@/lib/constants/mock-data";
+import { Modal, useToast } from "@/components/ui";
+import { downloadCSV } from "@/lib/utils/csv-export";
 
 // ─── 로컬 pending 목업 데이터 ────────────────────────────────────────────────
 
@@ -74,6 +76,13 @@ type StatusFilter = "all" | "pending" | "approved" | "suspended";
 
 type EnablerRow = (typeof ALL_ENABLERS_BASE)[number];
 
+interface ReviewAction {
+  enablerName: string;
+  action: "approved" | "rejected" | "suspended" | "restored";
+  reason?: string;
+  timestamp: string;
+}
+
 // ─── 유틸 ────────────────────────────────────────────────────────────────────
 
 function statusLabel(status: string) {
@@ -123,19 +132,68 @@ function renderStars(rating: number) {
   );
 }
 
-function notifyBackend() {
-  alert("백엔드 연동 후 처리됩니다.");
+function formatTimestamp(ts: string) {
+  const d = new Date(ts);
+  return d.toLocaleString("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function actionBadgeStyle(action: ReviewAction["action"]): React.CSSProperties {
+  if (action === "approved")
+    return {
+      background: "rgba(34,197,94,0.12)",
+      color: "var(--color-green)",
+      border: "1px solid rgba(34,197,94,0.25)",
+    };
+  if (action === "rejected")
+    return {
+      background: "rgba(239,68,68,0.12)",
+      color: "var(--color-red)",
+      border: "1px solid rgba(239,68,68,0.25)",
+    };
+  if (action === "suspended")
+    return {
+      background: "rgba(245,158,11,0.15)",
+      color: "var(--color-amber)",
+      border: "1px solid rgba(245,158,11,0.3)",
+    };
+  return {
+    background: "rgba(59,130,246,0.12)",
+    color: "#60a5fa",
+    border: "1px solid rgba(59,130,246,0.25)",
+  };
+}
+
+function actionLabel(action: ReviewAction["action"]) {
+  if (action === "approved") return "승인";
+  if (action === "rejected") return "거절";
+  if (action === "suspended") return "정지";
+  return "복원";
 }
 
 // ─── 메인 컴포넌트 ────────────────────────────────────────────────────────────
 
 export default function AdminEnablersPage() {
+  const { info, success } = useToast();
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [query, setQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [localStatuses, setLocalStatuses] = useState<Record<string, string>>(
-    {}
-  );
+  const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});
+
+  // 거절 모달
+  const [rejectTarget, setRejectTarget] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  // 심사 이력
+  const [reviewHistory, setReviewHistory] = useState<ReviewAction[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  // 체크박스 선택
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // 로컬 상태 오버라이드 적용
   const allEnablers = ALL_ENABLERS_BASE.map((e) =>
@@ -153,6 +211,21 @@ export default function AdminEnablersPage() {
     return matchStatus && matchQuery;
   });
 
+  function handleExportCSV() {
+    const headers = ["이름", "대학", "학위", "전문분야", "상태", "크레딧단가", "세션수", "평점"];
+    const rows = filtered.map((e) => [
+      e.fullName,
+      e.university,
+      e.degreeType,
+      e.specialties.join(" / "),
+      statusLabel(e.status),
+      String(e.creditRate),
+      String(e.sessionCount),
+      e.rating ? e.rating.toFixed(1) : "0",
+    ]);
+    downloadCSV("enablers", headers, rows);
+  }
+
   // 카운트
   const counts = {
     all: allEnablers.length,
@@ -161,13 +234,81 @@ export default function AdminEnablersPage() {
     suspended: allEnablers.filter((e) => e.status === "suspended").length,
   };
 
-  function handleAction(userId: string, action: "approve" | "reject" | "suspend" | "restore") {
-    notifyBackend();
-    // 미리보기용 로컬 상태 전환
-    if (action === "approve") setLocalStatuses((p) => ({ ...p, [userId]: "approved" }));
-    if (action === "reject") setLocalStatuses((p) => ({ ...p, [userId]: "suspended" }));
-    if (action === "suspend") setLocalStatuses((p) => ({ ...p, [userId]: "suspended" }));
-    if (action === "restore") setLocalStatuses((p) => ({ ...p, [userId]: "approved" }));
+  function pushHistory(entry: ReviewAction) {
+    setReviewHistory((prev) => [entry, ...prev]);
+  }
+
+  function handleAction(
+    userId: string,
+    action: "approve" | "reject" | "suspend" | "restore",
+    reason?: string
+  ) {
+    const enabler = allEnablers.find((e) => e.userId === userId);
+    const name = enabler?.fullName ?? userId;
+    const ts = new Date().toISOString();
+
+    if (action === "approve") {
+      setLocalStatuses((p) => ({ ...p, [userId]: "approved" }));
+      pushHistory({ enablerName: name, action: "approved", timestamp: ts });
+      success(`${name} 승인 완료`);
+    }
+    if (action === "reject") {
+      setLocalStatuses((p) => ({ ...p, [userId]: "suspended" }));
+      pushHistory({ enablerName: name, action: "rejected", reason, timestamp: ts });
+      success(`${name} 거절 완료`);
+    }
+    if (action === "suspend") {
+      setLocalStatuses((p) => ({ ...p, [userId]: "suspended" }));
+      pushHistory({ enablerName: name, action: "suspended", reason, timestamp: ts });
+      info(`${name} 정지 처리됨`);
+    }
+    if (action === "restore") {
+      setLocalStatuses((p) => ({ ...p, [userId]: "approved" }));
+      pushHistory({ enablerName: name, action: "restored", timestamp: ts });
+      success(`${name} 복원 완료`);
+    }
+  }
+
+  // 거절 모달 확인
+  function handleRejectConfirm() {
+    if (!rejectTarget || rejectReason.trim().length < 5) return;
+    handleAction(rejectTarget, "reject", rejectReason.trim());
+    setRejectTarget(null);
+    setRejectReason("");
+  }
+
+  // 거절 모달 열기 (reject 요청 시 인터셉트)
+  function handleRejectOpen(userId: string) {
+    setRejectTarget(userId);
+    setRejectReason("");
+  }
+
+  // 체크박스 토글
+  function toggleSelect(userId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  }
+
+  // 일괄 승인
+  function handleBulkApprove() {
+    const ts = new Date().toISOString();
+    const names: string[] = [];
+    selected.forEach((userId) => {
+      const enabler = allEnablers.find((e) => e.userId === userId);
+      const name = enabler?.fullName ?? userId;
+      names.push(name);
+      setLocalStatuses((p) => ({ ...p, [userId]: "approved" }));
+      setReviewHistory((prev) => [
+        { enablerName: name, action: "approved", timestamp: ts },
+        ...prev,
+      ]);
+    });
+    setSelected(new Set());
+    success(`${names.length}명 일괄 승인 완료`);
   }
 
   const TABS: { key: StatusFilter; label: string }[] = [
@@ -176,6 +317,18 @@ export default function AdminEnablersPage() {
     { key: "approved", label: "승인" },
     { key: "suspended", label: "정지" },
   ];
+
+  const btnBase: React.CSSProperties = {
+    padding: "7px 14px",
+    borderRadius: 8,
+    fontSize: 14,
+    fontFamily: "var(--font-body)",
+    fontWeight: 500,
+    cursor: "pointer",
+    transition: "all 0.15s",
+    border: "1px solid transparent",
+    whiteSpace: "nowrap",
+  };
 
   return (
     <div
@@ -256,26 +409,34 @@ export default function AdminEnablersPage() {
               transition: "border-color 0.15s",
             }}
             onFocus={(e) => {
-              (e.target as HTMLInputElement).style.borderColor =
-                "var(--color-accent)";
+              (e.target as HTMLInputElement).style.borderColor = "var(--color-accent)";
             }}
             onBlur={(e) => {
-              (e.target as HTMLInputElement).style.borderColor =
-                "var(--color-border)";
+              (e.target as HTMLInputElement).style.borderColor = "var(--color-border)";
             }}
           />
         </div>
+
+        {/* Export CSV */}
+        <button
+          onClick={handleExportCSV}
+          style={{
+            padding: "6px 14px",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "transparent",
+            color: "var(--color-dim)",
+            fontSize: "12px",
+            fontFamily: "var(--font-body)",
+            cursor: "pointer",
+          }}
+        >
+          Export CSV
+        </button>
       </div>
 
       {/* ── 상태 필터 탭 ── */}
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          marginBottom: 24,
-          flexWrap: "wrap",
-        }}
-      >
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
         {TABS.map((tab) => {
           const active = filter === tab.key;
           return (
@@ -291,9 +452,7 @@ export default function AdminEnablersPage() {
                 border: active
                   ? "1px solid rgba(163,230,53,0.4)"
                   : "1px solid var(--color-border)",
-                background: active
-                  ? "rgba(163,230,53,0.1)"
-                  : "var(--color-dark)",
+                background: active ? "rgba(163,230,53,0.1)" : "var(--color-dark)",
                 color: active ? "var(--color-accent)" : "var(--color-dim)",
                 fontSize: 15,
                 fontFamily: "var(--font-body)",
@@ -305,9 +464,7 @@ export default function AdminEnablersPage() {
               {tab.label}
               <span
                 style={{
-                  background: active
-                    ? "rgba(163,230,53,0.2)"
-                    : "rgba(255,255,255,0.06)",
+                  background: active ? "rgba(163,230,53,0.2)" : "rgba(255,255,255,0.06)",
                   color: active ? "var(--color-accent)" : "var(--color-dim)",
                   borderRadius: 10,
                   padding: "1px 7px",
@@ -323,6 +480,23 @@ export default function AdminEnablersPage() {
         })}
       </div>
 
+      {/* ── 일괄 승인 버튼 ── */}
+      {selected.size > 0 && (
+        <div style={{ marginBottom: 14 }}>
+          <button
+            onClick={handleBulkApprove}
+            style={{
+              ...btnBase,
+              background: "rgba(163,230,53,0.15)",
+              color: "var(--color-accent)",
+              borderColor: "rgba(163,230,53,0.35)",
+            }}
+          >
+            선택 항목 일괄 승인 ({selected.size}명)
+          </button>
+        </div>
+      )}
+
       {/* ── 테이블 ── */}
       <div
         style={{
@@ -336,13 +510,13 @@ export default function AdminEnablersPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "2fr 1.4fr 90px 90px 130px 120px 190px",
+            gridTemplateColumns: "36px 2fr 1.4fr 90px 90px 130px 120px 190px",
             padding: "10px 20px",
             borderBottom: "1px solid var(--color-border)",
             background: "rgba(255,255,255,0.02)",
           }}
         >
-          {["이름 / 소속", "전문 분야", "스코어", "세션", "평점", "상태", "액션"].map(
+          {["", "이름 / 소속", "전문 분야", "스코어", "세션", "평점", "상태", "액션"].map(
             (h) => (
               <span
                 key={h}
@@ -380,11 +554,13 @@ export default function AdminEnablersPage() {
               isLast={idx === filtered.length - 1}
               expanded={expandedId === enabler.userId}
               onToggleExpand={() =>
-                setExpandedId(
-                  expandedId === enabler.userId ? null : enabler.userId
-                )
+                setExpandedId(expandedId === enabler.userId ? null : enabler.userId)
               }
               onAction={handleAction}
+              onRejectOpen={handleRejectOpen}
+              onInfo={info}
+              selected={selected.has(enabler.userId)}
+              onToggleSelect={() => toggleSelect(enabler.userId)}
             />
           ))
         )}
@@ -403,6 +579,256 @@ export default function AdminEnablersPage() {
           {filtered.length}명 표시 중
         </p>
       )}
+
+      {/* ── 심사 이력 ── */}
+      <div
+        style={{
+          marginTop: 40,
+          border: "1px solid var(--color-border)",
+          borderRadius: 12,
+          overflow: "hidden",
+          background: "var(--color-card)",
+        }}
+      >
+        <button
+          onClick={() => setHistoryOpen((v) => !v)}
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "16px 20px",
+            background: "transparent",
+            border: "none",
+            color: "var(--color-text)",
+            cursor: "pointer",
+            fontFamily: "var(--font-display)",
+            fontSize: 16,
+            fontWeight: 700,
+          }}
+        >
+          <span>심사 이력</span>
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              color: "var(--color-dim)",
+            }}
+          >
+            <span
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                borderRadius: 10,
+                padding: "1px 8px",
+                fontSize: 13,
+                fontFamily: "var(--font-mono)",
+                fontWeight: 600,
+                color: "var(--color-dim)",
+              }}
+            >
+              {reviewHistory.length}
+            </span>
+            <span style={{ fontSize: 18, transition: "transform 0.2s", transform: historyOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+              ▾
+            </span>
+          </span>
+        </button>
+
+        {historyOpen && (
+          <div style={{ borderTop: "1px solid var(--color-border)" }}>
+            {reviewHistory.length === 0 ? (
+              <div
+                style={{
+                  padding: "32px 20px",
+                  textAlign: "center",
+                  color: "var(--color-dim)",
+                  fontSize: 15,
+                }}
+              >
+                아직 심사 이력이 없습니다.
+              </div>
+            ) : (
+              <div style={{ padding: "8px 20px 20px" }}>
+                {reviewHistory.map((entry, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 14,
+                      padding: "14px 0",
+                      borderBottom:
+                        i < reviewHistory.length - 1
+                          ? "1px solid rgba(255,255,255,0.05)"
+                          : "none",
+                    }}
+                  >
+                    {/* 타임라인 점 */}
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        marginTop: 5,
+                        flexShrink: 0,
+                        background:
+                          entry.action === "approved"
+                            ? "var(--color-green)"
+                            : entry.action === "rejected"
+                            ? "var(--color-red)"
+                            : entry.action === "suspended"
+                            ? "var(--color-amber)"
+                            : "#60a5fa",
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 600,
+                            color: "var(--color-text)",
+                          }}
+                        >
+                          {entry.enablerName}
+                        </span>
+                        <span
+                          style={{
+                            ...actionBadgeStyle(entry.action),
+                            padding: "2px 9px",
+                            borderRadius: 10,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            fontFamily: "var(--font-mono)",
+                          }}
+                        >
+                          {actionLabel(entry.action)}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 13,
+                            color: "var(--color-dim)",
+                            fontFamily: "var(--font-mono)",
+                          }}
+                        >
+                          {formatTimestamp(entry.timestamp)}
+                        </span>
+                      </div>
+                      {entry.reason && (
+                        <p
+                          style={{
+                            margin: "6px 0 0",
+                            fontSize: 14,
+                            color: "var(--color-dim)",
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          사유: {entry.reason}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── 거절 사유 모달 ── */}
+      <Modal
+        isOpen={rejectTarget !== null}
+        onClose={() => {
+          setRejectTarget(null);
+          setRejectReason("");
+        }}
+        title="Enabler 거절 사유"
+        size="sm"
+      >
+        <div>
+          <p style={{ margin: "0 0 12px", fontSize: 15, color: "var(--color-dim)", lineHeight: 1.6 }}>
+            거절 사유를 입력하세요. 최소 5자 이상 작성해야 합니다.
+          </p>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="거절 사유를 입력하세요..."
+            rows={4}
+            style={{
+              width: "100%",
+              background: "var(--color-dark)",
+              border: `1px solid ${rejectReason.trim().length > 0 && rejectReason.trim().length < 5 ? "var(--color-red)" : "var(--color-border)"}`,
+              borderRadius: 8,
+              padding: "10px 12px",
+              color: "var(--color-text)",
+              fontFamily: "var(--font-body)",
+              fontSize: 15,
+              outline: "none",
+              resize: "vertical",
+              boxSizing: "border-box",
+              lineHeight: 1.6,
+            }}
+            onFocus={(e) => {
+              (e.target as HTMLTextAreaElement).style.borderColor = "var(--color-accent)";
+            }}
+            onBlur={(e) => {
+              (e.target as HTMLTextAreaElement).style.borderColor =
+                rejectReason.trim().length > 0 && rejectReason.trim().length < 5
+                  ? "var(--color-red)"
+                  : "var(--color-border)";
+            }}
+          />
+          {rejectReason.trim().length > 0 && rejectReason.trim().length < 5 && (
+            <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--color-red)" }}>
+              최소 5자 이상 입력해 주세요.
+            </p>
+          )}
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 20 }}>
+            <button
+              onClick={() => {
+                setRejectTarget(null);
+                setRejectReason("");
+              }}
+              style={{
+                ...btnBase,
+                background: "transparent",
+                color: "var(--color-dim)",
+                borderColor: "var(--color-border)",
+              }}
+            >
+              취소
+            </button>
+            <button
+              onClick={handleRejectConfirm}
+              disabled={rejectReason.trim().length < 5}
+              style={{
+                ...btnBase,
+                background:
+                  rejectReason.trim().length >= 5
+                    ? "rgba(239,68,68,0.15)"
+                    : "rgba(239,68,68,0.05)",
+                color:
+                  rejectReason.trim().length >= 5 ? "var(--color-red)" : "rgba(239,68,68,0.3)",
+                borderColor:
+                  rejectReason.trim().length >= 5
+                    ? "rgba(239,68,68,0.35)"
+                    : "rgba(239,68,68,0.15)",
+                cursor: rejectReason.trim().length >= 5 ? "pointer" : "not-allowed",
+              }}
+            >
+              거절 확인
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -415,12 +841,20 @@ function EnablerRow({
   expanded,
   onToggleExpand,
   onAction,
+  onRejectOpen,
+  onInfo,
+  selected,
+  onToggleSelect,
 }: {
   enabler: EnablerRow;
   isLast: boolean;
   expanded: boolean;
   onToggleExpand: () => void;
-  onAction: (userId: string, action: "approve" | "reject" | "suspend" | "restore") => void;
+  onAction: (userId: string, action: "approve" | "reject" | "suspend" | "restore", reason?: string) => void;
+  onRejectOpen: (userId: string) => void;
+  onInfo: (msg: string) => void;
+  selected: boolean;
+  onToggleSelect: () => void;
 }) {
   return (
     <>
@@ -432,29 +866,40 @@ function EnablerRow({
         }}
       >
         <div
-          onClick={onToggleExpand}
           style={{
             display: "grid",
-            gridTemplateColumns: "2fr 1.4fr 90px 90px 130px 120px 190px",
+            gridTemplateColumns: "36px 2fr 1.4fr 90px 90px 130px 120px 190px",
             padding: "14px 20px",
             alignItems: "center",
-            cursor: "pointer",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background =
-              "rgba(255,255,255,0.025)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLDivElement).style.background = "transparent";
           }}
         >
-          {/* 이름 / 소속 */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Avatar
-              url={enabler.avatarUrl}
-              initial={enabler.avatarInitial}
-              size={36}
+          {/* 체크박스 */}
+          <div onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={onToggleSelect}
+              style={{
+                width: 16,
+                height: 16,
+                cursor: "pointer",
+                accentColor: "var(--color-accent)",
+              }}
             />
+          </div>
+
+          {/* 이름 / 소속 — 클릭 시 확장 */}
+          <div
+            onClick={onToggleExpand}
+            style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLDivElement).style.opacity = "0.8";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLDivElement).style.opacity = "1";
+            }}
+          >
+            <Avatar url={enabler.avatarUrl} initial={enabler.avatarInitial} size={36} />
             <div>
               <div
                 style={{
@@ -496,13 +941,7 @@ function EnablerRow({
               </span>
             ))}
             {enabler.specialties.length > 2 && (
-              <span
-                style={{
-                  fontSize: 13,
-                  color: "var(--color-dim)",
-                  alignSelf: "center",
-                }}
-              >
+              <span style={{ fontSize: 13, color: "var(--color-dim)", alignSelf: "center" }}>
                 +{enabler.specialties.length - 2}
               </span>
             )}
@@ -530,10 +969,7 @@ function EnablerRow({
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: 16,
-              color:
-                enabler.sessionCount > 0
-                  ? "var(--color-text)"
-                  : "var(--color-dim)",
+              color: enabler.sessionCount > 0 ? "var(--color-text)" : "var(--color-dim)",
             }}
           >
             {enabler.sessionCount > 0 ? enabler.sessionCount : "—"}
@@ -560,14 +996,13 @@ function EnablerRow({
           </div>
 
           {/* 액션 버튼 */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ display: "flex", gap: 6 }}
-          >
+          <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 6 }}>
             <ActionButtons
               status={enabler.status}
               userId={enabler.userId}
               onAction={onAction}
+              onRejectOpen={onRejectOpen}
+              onInfo={onInfo}
             />
           </div>
         </div>
@@ -576,7 +1011,7 @@ function EnablerRow({
         {expanded && (
           <div
             style={{
-              padding: "0 20px 18px 66px",
+              padding: "0 20px 18px 70px",
               borderTop: "1px solid rgba(255,255,255,0.04)",
               background: "rgba(255,255,255,0.015)",
             }}
@@ -626,15 +1061,7 @@ function EnablerRow({
 
 // ─── 아바타 ───────────────────────────────────────────────────────────────────
 
-function Avatar({
-  url,
-  initial,
-  size,
-}: {
-  url: string;
-  initial: string;
-  size: number;
-}) {
+function Avatar({ url, initial, size }: { url: string; initial: string; size: number }) {
   return (
     <div
       style={{
@@ -677,10 +1104,14 @@ function ActionButtons({
   status,
   userId,
   onAction,
+  onRejectOpen,
+  onInfo,
 }: {
   status: string;
   userId: string;
-  onAction: (userId: string, action: "approve" | "reject" | "suspend" | "restore") => void;
+  onAction: (userId: string, action: "approve" | "reject" | "suspend" | "restore", reason?: string) => void;
+  onRejectOpen: (userId: string) => void;
+  onInfo: (msg: string) => void;
 }) {
   const btnBase: React.CSSProperties = {
     padding: "5px 11px",
@@ -709,7 +1140,7 @@ function ActionButtons({
           승인
         </button>
         <button
-          onClick={() => onAction(userId, "reject")}
+          onClick={() => onRejectOpen(userId)}
           style={{
             ...btnBase,
             background: "transparent",
@@ -727,7 +1158,7 @@ function ActionButtons({
     return (
       <>
         <button
-          onClick={() => alert("백엔드 연동 후 프로필 페이지로 이동합니다.")}
+          onClick={() => onInfo("백엔드 연동 후 프로필 페이지로 이동합니다")}
           style={{
             ...btnBase,
             background: "transparent",

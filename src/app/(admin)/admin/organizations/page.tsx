@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ORGANIZATIONS, STARTUP_CREDITS } from "@/lib/constants/mock-data";
+import { ORGANIZATIONS } from "@/lib/constants/mock-data";
+import { useToast } from "@/components/ui";
+import { Modal } from "@/components/ui";
+import type { Organization } from "@/types";
 
 const ORG_STATS: Record<string, { startups: number; usedCredits: number; sessions: number }> = {
   org1: { startups: 5, usedCredits: 120, sessions: 45 },
@@ -10,23 +13,157 @@ const ORG_STATS: Record<string, { startups: number; usedCredits: number; session
   org4: { startups: 6, usedCredits: 95, sessions: 38 },
 };
 
-function handleAction(msg?: string) {
-  alert(msg ?? "백엔드 연동 후 처리됩니다");
-}
+const fieldStyle: React.CSSProperties = {
+  backgroundColor: "oklch(0.14 0.005 280 / 0.6)",
+  border: "1px solid var(--color-border)",
+  borderRadius: "var(--radius-lg)",
+  padding: "10px 14px",
+  fontSize: "14px",
+  fontFamily: "var(--font-body)",
+  color: "var(--color-text)",
+  width: "100%",
+  outline: "none",
+  boxSizing: "border-box",
+};
 
-function copyToClipboard(text: string) {
-  navigator.clipboard.writeText(text).then(() => {
-    alert(`초대코드 "${text}"가 클립보드에 복사되었습니다.`);
-  });
+const labelStyle: React.CSSProperties = {
+  fontSize: "11px",
+  fontFamily: "var(--font-display)",
+  fontWeight: 700,
+  letterSpacing: "0.09em",
+  textTransform: "uppercase" as const,
+  color: "var(--color-dim)",
+  marginBottom: "6px",
+  display: "block",
+};
+
+function FormField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", marginBottom: 16 }}>
+      <label style={labelStyle}>{label}</label>
+      {children}
+    </div>
+  );
 }
 
 export default function OrganizationsPage() {
+  const { info, success } = useToast();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [orgs, setOrgs] = useState<Organization[]>(ORGANIZATIONS);
 
-  const totalCredits = ORGANIZATIONS.reduce((sum, org) => sum + org.totalCredits, 0);
+  // Create modal
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    slug: "",
+    programName: "",
+    logoUrl: "",
+    inviteCode: "",
+    totalCredits: "",
+  });
+
+  // Edit modal
+  const [editOrg, setEditOrg] = useState<Organization | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    slug: "",
+    programName: "",
+    logoUrl: "",
+    inviteCode: "",
+    totalCredits: "",
+  });
+
+  // Credit modal
+  const [creditOrg, setCreditOrg] = useState<Organization | null>(null);
+  const [creditAmount, setCreditAmount] = useState("");
+
+  function openEdit(org: Organization) {
+    setEditOrg(org);
+    setEditForm({
+      name: org.name,
+      slug: org.slug,
+      programName: org.programName,
+      logoUrl: org.logoUrl ?? "",
+      inviteCode: org.inviteCode,
+      totalCredits: String(org.totalCredits),
+    });
+  }
+
+  function openCredit(org: Organization) {
+    setCreditOrg(org);
+    setCreditAmount("");
+  }
+
+  function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    const newOrg: Organization = {
+      id: `org${Date.now()}`,
+      name: createForm.name,
+      slug: createForm.slug,
+      programName: createForm.programName,
+      logoUrl: createForm.logoUrl || undefined,
+      inviteCode: createForm.inviteCode,
+      totalCredits: Number(createForm.totalCredits) || 0,
+    };
+    setOrgs((prev) => [...prev, newOrg]);
+    success(`기관 "${newOrg.name}"이 등록되었습니다`);
+    setCreateOpen(false);
+    setCreateForm({ name: "", slug: "", programName: "", logoUrl: "", inviteCode: "", totalCredits: "" });
+  }
+
+  function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editOrg) return;
+    setOrgs((prev) =>
+      prev.map((o) =>
+        o.id === editOrg.id
+          ? {
+              ...o,
+              name: editForm.name,
+              slug: editForm.slug,
+              programName: editForm.programName,
+              logoUrl: editForm.logoUrl || undefined,
+              inviteCode: editForm.inviteCode,
+              totalCredits: Number(editForm.totalCredits) || o.totalCredits,
+            }
+          : o
+      )
+    );
+    success(`기관 정보가 수정되었습니다`);
+    setEditOrg(null);
+  }
+
+  function handleCredit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!creditOrg) return;
+    const amount = Number(creditAmount);
+    if (!amount || amount <= 0) return;
+    setOrgs((prev) =>
+      prev.map((o) =>
+        o.id === creditOrg.id ? { ...o, totalCredits: o.totalCredits + amount } : o
+      )
+    );
+    success(`${creditOrg.name}에 ${amount.toLocaleString()} 크레딧이 추가되었습니다`);
+    setCreditOrg(null);
+    setCreditAmount("");
+  }
+
+  function copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      success(`초대코드 "${text}"가 클립보드에 복사되었습니다`);
+    });
+  }
+
+  const totalCredits = orgs.reduce((sum, org) => sum + org.totalCredits, 0);
   const totalUsed = Object.values(ORG_STATS).reduce((sum, s) => sum + s.usedCredits, 0);
   const totalRemaining = totalCredits - totalUsed;
-  const avgUtilization = Math.round((totalUsed / totalCredits) * 100);
+  const avgUtilization = totalCredits > 0 ? Math.round((totalUsed / totalCredits) * 100) : 0;
 
   return (
     <div style={{ fontFamily: "var(--font-body)", color: "var(--color-text)", maxWidth: 1100 }}>
@@ -59,11 +196,11 @@ export default function OrganizationsPage() {
               fontWeight: 400,
             }}
           >
-            총 {ORGANIZATIONS.length}개 기관
+            총 {orgs.length}개 기관
           </span>
         </div>
         <button
-          onClick={() => handleAction()}
+          onClick={() => setCreateOpen(true)}
           style={{
             background: "var(--color-accent)",
             color: "var(--color-black)",
@@ -100,9 +237,9 @@ export default function OrganizationsPage() {
           marginBottom: 32,
         }}
       >
-        {ORGANIZATIONS.map((org) => {
+        {orgs.map((org) => {
           const stats = ORG_STATS[org.id] ?? { startups: 0, usedCredits: 0, sessions: 0 };
-          const usagePercent = Math.round((stats.usedCredits / org.totalCredits) * 100);
+          const usagePercent = org.totalCredits > 0 ? Math.round((stats.usedCredits / org.totalCredits) * 100) : 0;
           const isHovered = hoveredCard === org.id;
 
           return (
@@ -317,11 +454,11 @@ export default function OrganizationsPage() {
                   borderTop: "1px solid var(--color-border)",
                 }}
               >
-                <GhostButton onClick={() => handleAction()}>상세보기</GhostButton>
-                <GhostButton onClick={() => handleAction()} accent>
+                <GhostButton onClick={() => info("백엔드 연동 후 처리됩니다")}>상세보기</GhostButton>
+                <GhostButton onClick={() => openCredit(org)} accent>
                   크레딧 추가
                 </GhostButton>
-                <GhostButton onClick={() => handleAction()}>수정</GhostButton>
+                <GhostButton onClick={() => openEdit(org)}>수정</GhostButton>
               </div>
             </div>
           );
@@ -360,6 +497,216 @@ export default function OrganizationsPage() {
           <SummaryItem label="평균 사용률" value={`${avgUtilization}`} unit="%" color="var(--color-accent)" />
         </div>
       </div>
+
+      {/* ── CREATE MODAL ── */}
+      <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="새 기관 등록" size="md">
+        <form onSubmit={handleCreate}>
+          <FormField label="기관명">
+            <input
+              required
+              style={fieldStyle}
+              value={createForm.name}
+              onChange={(e) => setCreateForm((p) => ({ ...p, name: e.target.value }))}
+              placeholder="예: KOTRA"
+            />
+          </FormField>
+          <FormField label="Slug">
+            <input
+              required
+              style={fieldStyle}
+              value={createForm.slug}
+              onChange={(e) => setCreateForm((p) => ({ ...p, slug: e.target.value }))}
+              placeholder="예: kotra"
+            />
+          </FormField>
+          <FormField label="프로그램명">
+            <input
+              required
+              style={fieldStyle}
+              value={createForm.programName}
+              onChange={(e) => setCreateForm((p) => ({ ...p, programName: e.target.value }))}
+              placeholder="예: K-Startup Grand Challenge"
+            />
+          </FormField>
+          <FormField label="로고 URL (선택)">
+            <input
+              style={fieldStyle}
+              value={createForm.logoUrl}
+              onChange={(e) => setCreateForm((p) => ({ ...p, logoUrl: e.target.value }))}
+              placeholder="https://..."
+            />
+          </FormField>
+          <FormField label="초대코드">
+            <input
+              required
+              style={fieldStyle}
+              value={createForm.inviteCode}
+              onChange={(e) => setCreateForm((p) => ({ ...p, inviteCode: e.target.value }))}
+              placeholder="예: KOTRA2026"
+            />
+          </FormField>
+          <FormField label="총 크레딧">
+            <input
+              required
+              type="number"
+              min={0}
+              style={fieldStyle}
+              value={createForm.totalCredits}
+              onChange={(e) => setCreateForm((p) => ({ ...p, totalCredits: e.target.value }))}
+              placeholder="예: 200"
+            />
+          </FormField>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+            <GhostButton onClick={() => setCreateOpen(false)}>취소</GhostButton>
+            <button
+              type="submit"
+              style={{
+                background: "var(--color-accent)",
+                color: "var(--color-black)",
+                border: "none",
+                borderRadius: 8,
+                padding: "9px 20px",
+                fontSize: 14,
+                fontWeight: 700,
+                fontFamily: "var(--font-display)",
+                cursor: "pointer",
+              }}
+            >
+              등록
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── EDIT MODAL ── */}
+      <Modal isOpen={!!editOrg} onClose={() => setEditOrg(null)} title="기관 정보 수정" size="md">
+        <form onSubmit={handleEdit}>
+          <FormField label="기관명">
+            <input
+              required
+              style={fieldStyle}
+              value={editForm.name}
+              onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+            />
+          </FormField>
+          <FormField label="Slug">
+            <input
+              required
+              style={fieldStyle}
+              value={editForm.slug}
+              onChange={(e) => setEditForm((p) => ({ ...p, slug: e.target.value }))}
+            />
+          </FormField>
+          <FormField label="프로그램명">
+            <input
+              required
+              style={fieldStyle}
+              value={editForm.programName}
+              onChange={(e) => setEditForm((p) => ({ ...p, programName: e.target.value }))}
+            />
+          </FormField>
+          <FormField label="로고 URL (선택)">
+            <input
+              style={fieldStyle}
+              value={editForm.logoUrl}
+              onChange={(e) => setEditForm((p) => ({ ...p, logoUrl: e.target.value }))}
+            />
+          </FormField>
+          <FormField label="초대코드">
+            <input
+              required
+              style={fieldStyle}
+              value={editForm.inviteCode}
+              onChange={(e) => setEditForm((p) => ({ ...p, inviteCode: e.target.value }))}
+            />
+          </FormField>
+          <FormField label="총 크레딧">
+            <input
+              required
+              type="number"
+              min={0}
+              style={fieldStyle}
+              value={editForm.totalCredits}
+              onChange={(e) => setEditForm((p) => ({ ...p, totalCredits: e.target.value }))}
+            />
+          </FormField>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+            <GhostButton onClick={() => setEditOrg(null)}>취소</GhostButton>
+            <button
+              type="submit"
+              style={{
+                background: "var(--color-accent)",
+                color: "var(--color-black)",
+                border: "none",
+                borderRadius: 8,
+                padding: "9px 20px",
+                fontSize: 14,
+                fontWeight: 700,
+                fontFamily: "var(--font-display)",
+                cursor: "pointer",
+              }}
+            >
+              저장
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── CREDIT MODAL ── */}
+      <Modal isOpen={!!creditOrg} onClose={() => setCreditOrg(null)} title="크레딧 추가" size="sm">
+        <form onSubmit={handleCredit}>
+          {creditOrg && (
+            <div
+              style={{
+                padding: "10px 14px",
+                marginBottom: 20,
+                background: "oklch(0.14 0.005 280 / 0.4)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-lg)",
+              }}
+            >
+              <div style={{ fontSize: 13, color: "var(--color-dim)", marginBottom: 4 }}>대상 기관</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--color-text)", fontFamily: "var(--font-display)" }}>
+                {creditOrg.name}
+              </div>
+              <div style={{ fontSize: 13, color: "var(--color-dim)", marginTop: 2 }}>
+                현재 {creditOrg.totalCredits.toLocaleString()} 크레딧
+              </div>
+            </div>
+          )}
+          <FormField label="추가할 크레딧 수량">
+            <input
+              required
+              type="number"
+              min={1}
+              style={fieldStyle}
+              value={creditAmount}
+              onChange={(e) => setCreditAmount(e.target.value)}
+              placeholder="예: 50"
+              autoFocus
+            />
+          </FormField>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
+            <GhostButton onClick={() => setCreditOrg(null)}>취소</GhostButton>
+            <button
+              type="submit"
+              style={{
+                background: "var(--color-accent)",
+                color: "var(--color-black)",
+                border: "none",
+                borderRadius: 8,
+                padding: "9px 20px",
+                fontSize: 14,
+                fontWeight: 700,
+                fontFamily: "var(--font-display)",
+                cursor: "pointer",
+              }}
+            >
+              추가
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
@@ -419,6 +766,7 @@ function GhostButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       style={{
         background: "none",

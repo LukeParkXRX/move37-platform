@@ -123,7 +123,7 @@ export default function NewProjectPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 340px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
             gap: "40px",
             alignItems: "start",
           }}
@@ -207,7 +207,7 @@ export default function NewProjectPage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
                 gap: "20px",
               }}
             >

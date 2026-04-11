@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { MOCK_USERS } from "@/lib/constants/mock-data";
+import { useToast } from "@/components/ui";
+import { downloadCSV } from "@/lib/utils/csv-export";
 
 type Role = "startup" | "enabler" | "org_admin" | "super_admin";
 
@@ -150,6 +152,7 @@ function Avatar({ user }: { user: UserRecord }) {
 }
 
 export default function AdminUsersPage() {
+  const { info } = useToast();
   const [roleFilter, setRoleFilter] = useState<"all" | Role>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -172,6 +175,18 @@ export default function AdminUsersPage() {
       return matchRole && matchSearch;
     });
   }, [roleFilter, searchQuery]);
+
+  function handleExportCSV() {
+    const headers = ["이름", "이메일", "역할", "인증여부", "가입일"];
+    const rows = filtered.map((u) => [
+      u.fullName,
+      u.email,
+      ROLE_LABELS[u.role],
+      u.isVerified ? "인증" : "미인증",
+      u.createdAt || "",
+    ]);
+    downloadCSV("users", headers, rows);
+  }
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -272,6 +287,23 @@ export default function AdminUsersPage() {
             }}
           />
         </div>
+
+        {/* Export CSV */}
+        <button
+          onClick={handleExportCSV}
+          style={{
+            padding: "6px 14px",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "transparent",
+            color: "var(--color-dim)",
+            fontSize: "12px",
+            fontFamily: "var(--font-body)",
+            cursor: "pointer",
+          }}
+        >
+          Export CSV
+        </button>
       </div>
 
       {/* Role Filter Tabs */}
@@ -408,6 +440,7 @@ export default function AdminUsersPage() {
               key={user.id}
               user={user}
               isLast={idx === filtered.length - 1}
+              onInfo={info}
             />
           ))
         )}
@@ -469,7 +502,7 @@ export default function AdminUsersPage() {
   );
 }
 
-function UserRow({ user, isLast }: { user: UserRecord; isLast: boolean }) {
+function UserRow({ user, isLast, onInfo }: { user: UserRecord; isLast: boolean; onInfo: (msg: string) => void }) {
   const roleStyle = ROLE_COLORS[user.role];
 
   return (
@@ -636,13 +669,13 @@ function UserRow({ user, isLast }: { user: UserRecord; isLast: boolean }) {
       >
         <ActionButton
           label="상세"
-          onClick={() => alert("백엔드 연동 후 처리됩니다")}
+          onClick={() => onInfo("백엔드 연동 후 처리됩니다")}
         />
         {user.role !== "super_admin" && (
           <ActionButton
             label="정지"
             variant="danger"
-            onClick={() => alert("백엔드 연동 후 처리됩니다")}
+            onClick={() => onInfo("백엔드 연동 후 처리됩니다")}
           />
         )}
       </div>

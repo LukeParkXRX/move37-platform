@@ -366,7 +366,7 @@ export default function OrgDashboardPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))",
             gap: "16px",
             marginBottom: "24px",
           }}
@@ -584,7 +584,7 @@ export default function OrgDashboardPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
             gap: "24px",
             marginBottom: "24px",
           }}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BOOKINGS, ENABLERS } from "@/lib/constants/mock-data";
+import { Pagination } from "@/components/ui";
 
 type FilterStatus = "all" | "pending" | "confirmed" | "completed" | "cancelled";
 type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled";
@@ -321,8 +322,11 @@ const FILTER_TABS: { key: FilterStatus; label: string }[] = [
   { key: "cancelled", label: "취소" },
 ];
 
+const PAGE_SIZE = 5;
+
 export default function BookingsPage() {
   const [activeFilter, setActiveFilter] = useState<FilterStatus>("all");
+  const [page, setPage] = useState(1);
 
   const countByStatus = BOOKINGS.reduce<Record<string, number>>((acc, b) => {
     acc[b.status] = (acc[b.status] ?? 0) + 1;
@@ -333,6 +337,14 @@ export default function BookingsPage() {
     activeFilter === "all"
       ? BOOKINGS
       : BOOKINGS.filter((b) => b.status === activeFilter);
+
+  const pagedBookings = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
+  function handleFilterChange(key: FilterStatus) {
+    setActiveFilter(key);
+    setPage(1);
+  }
 
   return (
     <div
@@ -389,7 +401,7 @@ export default function BookingsPage() {
           return (
             <button
               key={key}
-              onClick={() => setActiveFilter(key)}
+              onClick={() => handleFilterChange(key)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -470,11 +482,14 @@ export default function BookingsPage() {
           </Link>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {filtered.map((booking) => (
-            <BookingCard key={booking.id} booking={booking} />
-          ))}
-        </div>
+        <>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {pagedBookings.map((booking) => (
+              <BookingCard key={booking.id} booking={booking} />
+            ))}
+          </div>
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
       )}
     </div>
   );
