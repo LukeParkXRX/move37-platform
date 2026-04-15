@@ -2,13 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FieldLabel, FieldInput, FieldSelect } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { FieldLabel, FieldInput, FieldSelect, useToast } from "@/components/ui";
+import { signUpWithEmail, signInWithGoogle } from "@/lib/supabase/auth";
 
 type TabMode = "startup" | "enabler";
 
 // ── Startup Form ───────────────────────────────────────────────────────────────
 
-function StartupForm() {
+interface StartupFormProps {
+  onSubmit: (data: { name: string; email: string; password: string }) => void;
+  loading: boolean;
+}
+
+function StartupForm({ onSubmit, loading }: StartupFormProps) {
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("");
@@ -25,7 +32,13 @@ function StartupForm() {
     { label: "Other", value: "other" },
   ];
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit({ name, email, password });
+  }
+
   return (
+    <form id="signup-form" onSubmit={handleSubmit}>
     <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
         <div>
@@ -63,6 +76,7 @@ function StartupForm() {
         <FieldInput type="password" placeholder="8자 이상" value={password} onChange={setPassword} required />
       </div>
     </div>
+    </form>
   );
 }
 
@@ -87,7 +101,12 @@ const DEGREE_OPTIONS = [
   { label: "Undergraduate", value: "undergrad" },
 ];
 
-function EnablerForm() {
+interface EnablerFormProps {
+  onSubmit: (data: { name: string; email: string }) => void;
+  loading: boolean;
+}
+
+function EnablerForm({ onSubmit, loading }: EnablerFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [degree, setDegree] = useState("");
@@ -100,7 +119,13 @@ function EnablerForm() {
     );
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit({ name, email });
+  }
+
   return (
+    <form id="signup-form" onSubmit={handleSubmit}>
     <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
         <div>
@@ -171,6 +196,7 @@ function EnablerForm() {
         />
       </div>
     </div>
+    </form>
   );
 }
 
@@ -178,10 +204,53 @@ function EnablerForm() {
 
 export default function SignupPage() {
   const [activeTab, setActiveTab] = useState<TabMode>("startup");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    // TODO: 회원가입 로직 연결
+  const router = useRouter();
+  const toast = useToast();
+
+  async function handleStartupSubmit(data: { name: string; email: string; password: string }) {
+    setLoading(true);
+    try {
+      const { error } = await signUpWithEmail(data.email, data.password, {
+        full_name: data.name,
+        role: "startup",
+      });
+      if (error) {
+        toast.error(error.message);
+        setLoading(false);
+        return;
+      }
+      toast.success("가입이 완료되었습니다. 이메일을 확인해 주세요.");
+      router.push("/login");
+    } catch {
+      toast.error("가입 중 오류가 발생했습니다.");
+      setLoading(false);
+    }
+  }
+
+  async function handleEnablerSubmit(data: { name: string; email: string }) {
+    setLoading(true);
+    try {
+      const { error } = await signUpWithEmail(data.email, "tempPass123!", {
+        full_name: data.name,
+        role: "enabler",
+      });
+      if (error) {
+        toast.error(error.message);
+        setLoading(false);
+        return;
+      }
+      toast.success("가입이 완료되었습니다. 이메일을 확인해 주세요.");
+      router.push("/login");
+    } catch {
+      toast.error("가입 중 오류가 발생했습니다.");
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignup() {
+    await signInWithGoogle();
   }
 
   return (
@@ -568,49 +637,62 @@ export default function SignupPage() {
             </div>
 
             {/* ── Form content ── */}
-            <form onSubmit={handleSubmit}>
-              <div
-                key={activeTab}
-                style={{
-                  animation: "var(--animate-slide-up)",
-                  animationDuration: "0.28s",
-                }}
-              >
-                {activeTab === "startup" ? <StartupForm /> : <EnablerForm />}
-              </div>
+            <div
+              key={activeTab}
+              style={{
+                animation: "var(--animate-slide-up)",
+                animationDuration: "0.28s",
+              }}
+            >
+              {activeTab === "startup" ? (
+                <StartupForm onSubmit={handleStartupSubmit} loading={loading} />
+              ) : (
+                <EnablerForm onSubmit={handleEnablerSubmit} loading={loading} />
+              )}
+            </div>
 
-              {/* ── Submit button ── */}
-              <div style={{ marginTop: "24px", animation: "var(--animate-slide-up)", animationDelay: "0.15s" }}>
-                <button
-                  type="submit"
-                  style={{
-                    width: "100%",
-                    padding: "13px 20px",
-                    borderRadius: "var(--radius-lg)",
-                    backgroundColor: "var(--color-accent)",
-                    color: "oklch(0.1 0 0)",
-                    fontSize: "14px",
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 700,
-                    border: "none",
-                    cursor: "pointer",
-                    letterSpacing: "-0.01em",
-                    transition: "opacity 0.15s ease, transform 0.15s ease",
-                    boxShadow: "var(--shadow-accent)",
-                  }}
-                  onMouseEnter={(e) => {
+            {/* ── Submit button ── */}
+            <div style={{ marginTop: "24px", animation: "var(--animate-slide-up)", animationDelay: "0.15s" }}>
+              <button
+                type="submit"
+                form="signup-form"
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "13px 20px",
+                  borderRadius: "var(--radius-lg)",
+                  backgroundColor: "var(--color-accent)",
+                  color: "oklch(0.1 0 0)",
+                  fontSize: "14px",
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  letterSpacing: "-0.01em",
+                  transition: "opacity 0.15s ease, transform 0.15s ease",
+                  boxShadow: "var(--shadow-accent)",
+                  opacity: loading ? 0.65 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
                     (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
                     (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                  }}
-                  onMouseLeave={(e) => {
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) {
                     (e.currentTarget as HTMLButtonElement).style.opacity = "1";
                     (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                  }}
-                >
-                  {activeTab === "startup" ? "스타트업으로 시작하기" : "Enabler로 등록하기"}
-                </button>
-              </div>
-            </form>
+                  }
+                }}
+              >
+                {loading
+                  ? "처리 중..."
+                  : activeTab === "startup"
+                  ? "스타트업으로 시작하기"
+                  : "Enabler로 등록하기"}
+              </button>
+            </div>
 
             {/* ── Divider ── */}
             <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" }}>
@@ -624,6 +706,7 @@ export default function SignupPage() {
             {/* ── Google signup button ── */}
             <button
               type="button"
+              onClick={handleGoogleSignup}
               style={{
                 width: "100%",
                 padding: "11px 20px",

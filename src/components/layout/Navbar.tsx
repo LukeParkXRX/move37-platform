@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { signOut } from "@/lib/supabase/auth";
 
 type Role = "startup" | "enabler" | "org_admin" | "super_admin";
 
@@ -48,19 +51,20 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Mock auth state — will be replaced with Supabase Auth later
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentRole] = useState<Role>("startup");
+  const router = useRouter();
+  const { user, profile, loading } = useAuth();
+  const isLoggedIn = !!user;
+  const currentRole = (profile?.role || "startup") as Role;
 
-  // Mock user for display
-  const mockUser = {
-    fullName: "김태호",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-    role: currentRole,
-  };
+  const displayName = profile?.full_name || user?.email || "";
+  const avatarUrl = profile?.avatar_url || "";
 
   const activeLinks = isLoggedIn ? ROLE_NAV_LINKS[currentRole] : GUEST_NAV_LINKS;
+
+  async function handleSignOut() {
+    await signOut();
+    router.push("/");
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -156,32 +160,36 @@ export default function Navbar() {
 
           {/* 우측 액션 — 데스크탑 */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
-            {isLoggedIn ? (
+            {loading ? (
+              <div style={{ width: "80px", height: "32px", borderRadius: "var(--radius-md)", backgroundColor: "var(--color-card)", opacity: 0.5 }} />
+            ) : isLoggedIn ? (
               <>
                 {/* 유저 아바타 + 이름 */}
                 <div className="flex items-center gap-2">
-                  <img
-                    src={mockUser.avatarUrl}
-                    alt={mockUser.fullName}
-                    width={32}
-                    height={32}
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "1px solid var(--color-border)",
-                    }}
-                    onError={(e) => {
-                      const target = e.currentTarget as HTMLImageElement;
-                      target.style.display = "none";
-                      const fallback = target.nextElementSibling as HTMLElement;
-                      if (fallback) fallback.style.display = "flex";
-                    }}
-                  />
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={displayName}
+                      width={32}
+                      height={32}
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: "1px solid var(--color-border)",
+                      }}
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        target.style.display = "none";
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
                   <span
                     style={{
-                      display: "none",
+                      display: avatarUrl ? "none" : "flex",
                       width: "32px",
                       height: "32px",
                       borderRadius: "50%",
@@ -194,7 +202,7 @@ export default function Navbar() {
                       fontFamily: "var(--font-display)",
                     }}
                   >
-                    {mockUser.fullName.charAt(0)}
+                    {displayName.charAt(0)}
                   </span>
                   <span
                     style={{
@@ -203,13 +211,13 @@ export default function Navbar() {
                       fontFamily: "var(--font-body)",
                     }}
                   >
-                    {mockUser.fullName}
+                    {displayName}
                   </span>
                 </div>
 
                 {/* 로그아웃 */}
                 <button
-                  onClick={() => setIsLoggedIn(false)}
+                  onClick={handleSignOut}
                   className="px-3.5 py-1.5 text-[15px] rounded-md border transition-colors duration-150"
                   style={{
                     color: "var(--color-dim)",
@@ -348,24 +356,45 @@ export default function Navbar() {
           {isLoggedIn && (
             <>
               <div className="flex items-center gap-3 px-4 py-3">
-                <img
-                  src={mockUser.avatarUrl}
-                  alt={mockUser.fullName}
-                  width={36}
-                  height={36}
-                  style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: "1px solid var(--color-border)",
-                    flexShrink: 0,
-                  }}
-                  onError={(e) => {
-                    const target = e.currentTarget as HTMLImageElement;
-                    target.style.display = "none";
-                  }}
-                />
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    width={36}
+                    height={36}
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "1px solid var(--color-border)",
+                      flexShrink: 0,
+                    }}
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      target.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <span
+                    style={{
+                      display: "flex",
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      backgroundColor: "var(--color-accent)",
+                      color: "oklch(0.1 0 0)",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontFamily: "var(--font-display)",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {displayName.charAt(0)}
+                  </span>
+                )}
                 <div>
                   <p
                     style={{
@@ -376,7 +405,7 @@ export default function Navbar() {
                       margin: 0,
                     }}
                   >
-                    {mockUser.fullName}
+                    {displayName}
                   </p>
                   <p
                     style={{
@@ -420,7 +449,7 @@ export default function Navbar() {
           {isLoggedIn ? (
             <button
               onClick={() => {
-                setIsLoggedIn(false);
+                handleSignOut();
                 setMenuOpen(false);
               }}
               className="px-4 py-3 text-sm rounded-md border text-left transition-colors duration-150"

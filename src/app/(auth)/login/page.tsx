@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { FieldLabel, FieldInput } from "@/components/ui";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FieldLabel, FieldInput, useToast } from "@/components/ui";
+import { signInWithEmail, signInWithGoogle } from "@/lib/supabase/auth";
 
 type TabMode = "startup" | "enabler";
 
@@ -10,10 +12,42 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<TabMode>("startup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const toast = useToast();
+
+  useEffect(() => {
+    if (searchParams.get("error") === "auth") {
+      toast.error("인증이 필요합니다. 로그인해 주세요.");
+    }
+  }, [searchParams, toast]);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: 로그인 로직 연결
+    setLoading(true);
+    try {
+      const { error } = await signInWithEmail(email, password);
+      if (error) {
+        toast.error(
+          error.message === "Invalid login credentials"
+            ? "이메일 또는 비밀번호가 올바르지 않습니다."
+            : error.message
+        );
+        setLoading(false);
+        return;
+      }
+      const redirect = searchParams.get("redirect") || "/my";
+      router.push(redirect);
+    } catch {
+      toast.error("로그인 중 오류가 발생했습니다.");
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    await signInWithGoogle();
   }
 
   return (
@@ -434,6 +468,7 @@ export default function LoginPage() {
               {/* ── Submit button ── */}
               <button
                 type="submit"
+                disabled={loading}
                 style={{
                   width: "100%",
                   padding: "13px 20px",
@@ -444,21 +479,26 @@ export default function LoginPage() {
                   fontFamily: "var(--font-display)",
                   fontWeight: 700,
                   border: "none",
-                  cursor: "pointer",
+                  cursor: loading ? "not-allowed" : "pointer",
                   letterSpacing: "-0.01em",
                   transition: "opacity 0.15s ease, transform 0.15s ease",
                   boxShadow: "var(--shadow-accent)",
+                  opacity: loading ? 0.65 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+                  if (!loading) {
+                    (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-                  (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                  if (!loading) {
+                    (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
+                  }
                 }}
               >
-                로그인
+                {loading ? "로그인 중..." : "로그인"}
               </button>
             </form>
 
@@ -474,6 +514,7 @@ export default function LoginPage() {
             {/* ── Google login button ── */}
             <button
               type="button"
+              onClick={handleGoogleLogin}
               style={{
                 width: "100%",
                 padding: "11px 20px",
