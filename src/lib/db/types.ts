@@ -51,7 +51,7 @@ export interface DbOrganization {
   slug: string;
   program_name: string;
   logo_url: string | null;
-  invite_code: string;
+  invite_code: string | null;
   total_credits: number;
   created_at: string;
 }
@@ -127,17 +127,18 @@ export interface DbCreditExpiryPolicy {
 export interface Database {
   public: {
     Tables: {
-      users: { Row: DbUser; Insert: Partial<DbUser> & Pick<DbUser, "id" | "email" | "full_name">; Update: Partial<DbUser> };
-      enabler_profiles: { Row: DbEnablerProfile; Insert: Partial<DbEnablerProfile> & Pick<DbEnablerProfile, "user_id">; Update: Partial<DbEnablerProfile> };
-      startup_profiles: { Row: DbStartupProfile; Insert: Partial<DbStartupProfile> & Pick<DbStartupProfile, "user_id">; Update: Partial<DbStartupProfile> };
-      organizations: { Row: DbOrganization; Insert: Partial<DbOrganization> & Pick<DbOrganization, "name" | "slug">; Update: Partial<DbOrganization> };
-      bookings: { Row: DbBooking; Insert: Partial<DbBooking> & Pick<DbBooking, "startup_id" | "enabler_id" | "scheduled_at">; Update: Partial<DbBooking> };
-      credit_transactions: { Row: DbCreditTransaction; Insert: Partial<DbCreditTransaction> & Pick<DbCreditTransaction, "tx_type" | "amount">; Update: Partial<DbCreditTransaction> };
-      reviews: { Row: DbReview; Insert: Partial<DbReview> & Pick<DbReview, "author_id" | "target_id" | "booking_id" | "rating">; Update: Partial<DbReview> };
-      insights: { Row: DbInsight; Insert: Partial<DbInsight> & Pick<DbInsight, "author_id" | "title">; Update: Partial<DbInsight> };
-      credit_settings: { Row: DbCreditSetting; Insert: Partial<DbCreditSetting> & Pick<DbCreditSetting, "session_type">; Update: Partial<DbCreditSetting> };
-      credit_expiry_policies: { Row: DbCreditExpiryPolicy; Insert: Partial<DbCreditExpiryPolicy>; Update: Partial<DbCreditExpiryPolicy> };
+      users: { Row: DbUser; Insert: Partial<DbUser> & Pick<DbUser, "id" | "email" | "full_name">; Update: Partial<DbUser>; Relationships: [] };
+      enabler_profiles: { Row: DbEnablerProfile; Insert: Partial<DbEnablerProfile> & Pick<DbEnablerProfile, "user_id">; Update: Partial<DbEnablerProfile>; Relationships: [] };
+      startup_profiles: { Row: DbStartupProfile; Insert: Partial<DbStartupProfile> & Pick<DbStartupProfile, "user_id">; Update: Partial<DbStartupProfile>; Relationships: [] };
+      organizations: { Row: DbOrganization; Insert: Partial<DbOrganization> & Pick<DbOrganization, "name" | "slug">; Update: Partial<DbOrganization>; Relationships: [] };
+      bookings: { Row: DbBooking; Insert: Partial<DbBooking> & Pick<DbBooking, "startup_id" | "enabler_id" | "scheduled_at">; Update: Partial<DbBooking>; Relationships: [] };
+      credit_transactions: { Row: DbCreditTransaction; Insert: Partial<DbCreditTransaction> & Pick<DbCreditTransaction, "tx_type" | "amount">; Update: Partial<DbCreditTransaction>; Relationships: [] };
+      reviews: { Row: DbReview; Insert: Partial<DbReview> & Pick<DbReview, "author_id" | "target_id" | "booking_id" | "rating">; Update: Partial<DbReview>; Relationships: [] };
+      insights: { Row: DbInsight; Insert: Partial<DbInsight> & Pick<DbInsight, "author_id" | "title">; Update: Partial<DbInsight>; Relationships: [] };
+      credit_settings: { Row: DbCreditSetting; Insert: Partial<DbCreditSetting> & Pick<DbCreditSetting, "session_type">; Update: Partial<DbCreditSetting>; Relationships: [] };
+      credit_expiry_policies: { Row: DbCreditExpiryPolicy; Insert: Partial<DbCreditExpiryPolicy>; Update: Partial<DbCreditExpiryPolicy>; Relationships: [] };
     };
+    Views: Record<string, never>;
     Functions: {
       grant_credits_to_org: { Args: { p_org_id: string; p_amount: number; p_description?: string }; Returns: DbCreditTransaction };
       allocate_credits_to_startup: { Args: { p_org_id: string; p_startup_id: string; p_amount: number; p_description?: string }; Returns: DbCreditTransaction };
