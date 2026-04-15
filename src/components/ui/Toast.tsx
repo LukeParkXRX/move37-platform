@@ -156,7 +156,10 @@ function ToastEl({
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [mounted, setMounted] = useState(false);
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  useEffect(() => { setMounted(true); }, []);
 
   const removeToast = useCallback((id: string) => {
     // Start exit animation
@@ -202,7 +205,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={ctx}>
       {children}
-      {typeof window !== "undefined" &&
+      {mounted &&
         createPortal(
           <>
             <style>{`
