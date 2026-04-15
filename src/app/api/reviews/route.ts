@@ -1,0 +1,71 @@
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const { searchParams } = new URL(request.url);
+    const target_id = searchParams.get("target_id");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+
+    let query = db
+      .from("reviews")
+      .select("*, users!author_id(full_name, avatar_url)", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (target_id) query = query.eq("target_id", target_id);
+
+    const { data, error, count } = await query;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ reviews: data, total: count, page, limit });
+  } catch { return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const body = await request.json();
+    const { booking_id, target_id, rating, comment } = body;
+
+    if (!booking_id || !target_id || !rating) {
+      return NextResponse.json({ error: "booking_id, target_id, rating required" }, { status: 400 });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return NextResponse.json({ error: "Rating must be 1-5" }, { status: 400 });
+    }
+
+    // Verify booking belongs to user and is completed
+    const { data: booking } = await db.from("bookings").select("*").eq("id", booking_id).single();
+    if (!booking || booking.startup_id !== user.id) {
+      return NextResponse.json({ error: "Invalid booking" }, { status: 403 });
+    }
+    if (booking.status !== "completed") {
+      return NextResponse.json({ error: "Booking must be completed to leave a review" }, { status: 400 });
+    }
+
+    const { data, error } = await db.from("reviews").insert({
+      author_id: user.id,
+      target_id,
+      booking_id,
+      rating,
+      comment: comment || "",
+    }).select().single();
+
+    if (error) {
+      if (error.code === "23505") return NextResponse.json({ error: "이미 리뷰를 작성하셨습니다" }, { status: 409 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ review: data });
+  } catch { return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+}

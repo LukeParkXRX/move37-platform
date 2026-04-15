@@ -1,0 +1,84 @@
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const { data: profile } = await db.from("users").select("role").eq("id", user.id).single();
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+
+    let query = db.from("bookings").select("*", { count: "exact" }).order("created_at", { ascending: false }).range((page - 1) * limit, page * limit - 1);
+
+    if (profile?.role === "startup") query = query.eq("startup_id", user.id);
+    else if (profile?.role === "enabler") query = query.eq("enabler_id", user.id);
+    if (status) query = query.eq("status", status);
+
+    const { data, error, count } = await query;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ bookings: data, total: count, page, limit });
+  } catch { return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const body = await request.json();
+    const { enabler_id, type, scheduled_at, brief } = body;
+
+    if (!enabler_id || !type || !scheduled_at) {
+      return NextResponse.json({ error: "enabler_id, type, scheduled_at required" }, { status: 400 });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    // Get credits required for this session type
+    const { data: setting } = await db.from("credit_settings").select("credits_required").eq("session_type", type).single();
+    const creditsAmount = setting?.credits_required ?? 0;
+
+    // Create booking
+    const { data: booking, error } = await db.from("bookings").insert({
+      startup_id: user.id,
+      enabler_id,
+      type,
+      scheduled_at,
+      credits_amount: creditsAmount,
+      brief: brief || "",
+      status: "pending",
+    }).select().single();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Set meeting URL
+    const meetingUrl = `/meeting/session-${booking.id}`;
+    await db.from("bookings").update({ meeting_url: meetingUrl }).eq("id", booking.id);
+
+    // Hold credits if needed
+    if (creditsAmount > 0) {
+      const { error: holdError } = await db.rpc("hold_credits", {
+        p_booking_id: booking.id,
+        p_startup_id: user.id,
+        p_enabler_id: enabler_id,
+        p_amount: creditsAmount,
+      });
+      if (holdError) {
+        // Rollback booking
+        await db.from("bookings").delete().eq("id", booking.id);
+        return NextResponse.json({ error: "크레딧이 부족합니다: " + holdError.message }, { status: 400 });
+      }
+    }
+
+    return NextResponse.json({ booking: { ...booking, meeting_url: meetingUrl } });
+  } catch { return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+}
