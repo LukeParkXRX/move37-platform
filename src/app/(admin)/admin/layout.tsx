@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { icon: "🏢", label: "기관 관리", href: "/admin/organizations" },
   { icon: "👥", label: "사용자 관리", href: "/admin/users" },
   { icon: "💰", label: "크레딧 감사", href: "/admin/credits" },
-  { icon: "⚙️", label: "시스템 설정", href: "/admin/settings", disabled: true },
+  { icon: "⚙️", label: "시스템 설정", href: "/admin/settings" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -80,14 +80,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Nav */}
         <nav style={{ padding: "12px 12px", flex: 1 }}>
           {NAV_ITEMS.map((item) => {
-            const isActive = !item.disabled && pathname.startsWith(item.href);
-            const isDisabled = item.disabled;
+            const isActive = pathname.startsWith(item.href);
 
             return (
               <Link
                 key={item.href}
-                href={isDisabled ? "#" : item.href}
-                onClick={isDisabled ? (e) => e.preventDefault() : undefined}
+                href={item.href}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -98,24 +96,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   textDecoration: "none",
                   fontSize: 16,
                   fontWeight: isActive ? 600 : 400,
-                  color: isDisabled
-                    ? "var(--color-dim)"
-                    : isActive
-                    ? "var(--color-accent)"
-                    : "var(--color-text)",
+                  color: isActive ? "var(--color-accent)" : "var(--color-text)",
                   background: isActive ? "rgba(var(--color-accent-rgb, 123, 104, 238), 0.12)" : "transparent",
-                  cursor: isDisabled ? "not-allowed" : "pointer",
-                  opacity: isDisabled ? 0.45 : 1,
+                  cursor: "pointer",
                   transition: "background 0.15s, color 0.15s",
                 }}
                 onMouseEnter={(e) => {
-                  if (!isActive && !isDisabled) {
+                  if (!isActive) {
                     (e.currentTarget as HTMLAnchorElement).style.background = "var(--color-card)";
                     (e.currentTarget as HTMLAnchorElement).style.color = "var(--color-text)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!isActive && !isDisabled) {
+                  if (!isActive) {
                     (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
                     (e.currentTarget as HTMLAnchorElement).style.color = "var(--color-text)";
                   }
