@@ -1,5 +1,5 @@
--- Enable necessary extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable necessary extensions (pgcrypto provides gen_random_uuid())
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 1. ENUM TYPES
 CREATE TYPE user_role AS ENUM ('startup', 'enabler', 'org_admin', 'super_admin');
@@ -11,12 +11,12 @@ CREATE TYPE credit_tx_type AS ENUM ('purchase', 'allocate', 'use', 'hold', 'conf
 
 -- 2. ORGANIZATIONS (must come before users due to FK)
 CREATE TABLE organizations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   program_name TEXT NOT NULL DEFAULT '',
   logo_url TEXT,
-  invite_code TEXT UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(6), 'hex'),
+  invite_code TEXT UNIQUE NOT NULL DEFAULT encode(extensions.gen_random_bytes(6), 'hex'),
   total_credits INT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -66,7 +66,7 @@ CREATE TABLE startup_profiles (
 
 -- 6. BOOKINGS
 CREATE TABLE bookings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   startup_id UUID NOT NULL REFERENCES users(id),
   enabler_id UUID NOT NULL REFERENCES users(id),
   type booking_type NOT NULL DEFAULT 'standard',
@@ -83,7 +83,7 @@ CREATE TABLE bookings (
 
 -- 7. CREDIT_TRANSACTIONS (append-only audit log)
 CREATE TABLE credit_transactions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tx_type credit_tx_type NOT NULL,
   amount INT NOT NULL,
   org_id UUID REFERENCES organizations(id),
@@ -97,7 +97,7 @@ CREATE TABLE credit_transactions (
 
 -- 8. REVIEWS (1:1 with booking)
 CREATE TABLE reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   author_id UUID NOT NULL REFERENCES users(id),
   target_id UUID NOT NULL REFERENCES users(id),
   booking_id UUID UNIQUE NOT NULL REFERENCES bookings(id),
@@ -108,7 +108,7 @@ CREATE TABLE reviews (
 
 -- 9. INSIGHTS (blog/articles by enablers)
 CREATE TABLE insights (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   author_id UUID NOT NULL REFERENCES users(id),
   title TEXT NOT NULL,
   content TEXT NOT NULL DEFAULT '',
@@ -118,7 +118,7 @@ CREATE TABLE insights (
 
 -- 10. CREDIT_SETTINGS (admin-configurable token costs per session type)
 CREATE TABLE credit_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_type booking_type NOT NULL UNIQUE,
   credits_required INT NOT NULL DEFAULT 0,
   label TEXT NOT NULL DEFAULT '',
@@ -130,7 +130,7 @@ CREATE TABLE credit_settings (
 
 -- 11. CREDIT_EXPIRY_POLICIES (token expiration rules)
 CREATE TABLE credit_expiry_policies (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
   expiry_days INT NOT NULL DEFAULT 365,
   grace_period_days INT NOT NULL DEFAULT 30,
