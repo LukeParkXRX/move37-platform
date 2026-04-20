@@ -35,3 +35,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .gstack/
 .next/
 .vercel
+
+# Cloudflare API token (local only)
+.cf-token
+
+# Supabase CLI temp files
+supabase/.temp/
+
