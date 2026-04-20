@@ -1,7 +1,5 @@
 "use client";
 
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -97,7 +95,6 @@ const testimonials = [
 export default function CasesPage() {
   return (
     <>
-      <Navbar />
       <main style={{ paddingTop: 56 }}>
         {/* Hero */}
         <section
@@ -379,7 +376,6 @@ export default function CasesPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
 
 const CATEGORIES = [
   "GTM 전략",
@@ -72,8 +71,6 @@ export default function NewProjectPage() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--color-black)" }}>
-      <Navbar />
-
       <div
         style={{
           maxWidth: "1120px",

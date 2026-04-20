@@ -1,6 +1,3 @@
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-
 export const metadata = {
   title: "이용약관",
 };
@@ -8,7 +5,6 @@ export const metadata = {
 export default function TermsPage() {
   return (
     <>
-      <Navbar />
       <main
         style={{
           backgroundColor: "var(--color-black)",
@@ -303,7 +299,6 @@ export default function TermsPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

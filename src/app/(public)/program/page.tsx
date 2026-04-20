@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 
 const EXPERTISE_TAGS = [
   "B2B SaaS",
@@ -47,7 +45,6 @@ const STATS = [
 export default function ProgramPage() {
   return (
     <>
-      <Navbar />
       <main className="min-h-screen" style={{ paddingTop: 56 }}>
         {/* ── Hero ── */}
         <section
@@ -344,7 +341,6 @@ export default function ProgramPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

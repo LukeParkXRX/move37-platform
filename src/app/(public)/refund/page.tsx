@@ -1,6 +1,3 @@
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-
 export const metadata = {
   title: "환불정책",
 };
@@ -8,7 +5,6 @@ export const metadata = {
 export default function RefundPage() {
   return (
     <>
-      <Navbar />
       <main
         style={{
           backgroundColor: "var(--color-black)",
@@ -285,7 +281,6 @@ export default function RefundPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

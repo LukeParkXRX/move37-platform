@@ -1,7 +1,5 @@
 "use client";
 
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import React from "react";
 
@@ -70,7 +68,6 @@ const jobs = [
 export default function CareersPage() {
   return (
     <>
-      <Navbar />
       <main style={{ paddingTop: 56 }}>
         {/* Hero */}
         <section style={{ padding: "80px 0 56px" }}>
@@ -268,7 +265,6 @@ export default function CareersPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

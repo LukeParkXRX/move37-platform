@@ -2,8 +2,6 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { ENABLERS } from "@/lib/constants/mock-data";
 import type { EnablerBadge } from "@/types";
 
@@ -337,7 +335,6 @@ export default function EnablersPage() {
     <div
       style={{ minHeight: "100vh", backgroundColor: "var(--color-black)" }}
     >
-      <Navbar />
 
       <main>
         {/* ── Hero Section ──────────────────────────────────────────── */}
@@ -795,8 +792,6 @@ export default function EnablersPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

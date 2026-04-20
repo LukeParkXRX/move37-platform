@@ -1,6 +1,3 @@
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-
 export const metadata = {
   title: "개인정보처리방침",
 };
@@ -8,7 +5,6 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <>
-      <Navbar />
       <main
         style={{
           backgroundColor: "var(--color-black)",
@@ -302,7 +298,6 @@ export default function PrivacyPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

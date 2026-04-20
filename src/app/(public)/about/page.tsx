@@ -1,7 +1,5 @@
 "use client";
 
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -25,7 +23,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 export default function AboutPage() {
   return (
     <>
-      <Navbar />
       <main style={{ paddingTop: 56 }}>
         {/* Hero */}
         <section style={{ position: "relative", overflow: "hidden", padding: "96px 24px 80px" }}>
@@ -308,7 +305,6 @@ export default function AboutPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

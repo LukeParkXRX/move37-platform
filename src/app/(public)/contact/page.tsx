@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import { useToast } from "@/components/ui";
 
@@ -93,7 +91,6 @@ export default function ContactPage() {
 
   return (
     <>
-      <Navbar />
       <main style={{ paddingTop: 56 }}>
         {/* Hero */}
         <section style={{ padding: "80px 0 56px" }}>
@@ -398,7 +395,6 @@ export default function ContactPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

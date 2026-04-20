@@ -1,7 +1,5 @@
 "use client";
 
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -108,7 +106,6 @@ export default function CreditsPage() {
         color: "var(--color-text)",
       }}
     >
-      <Navbar />
 
       <main style={{ paddingTop: 56 }}>
         {/* Hero Section */}
@@ -442,8 +439,6 @@ export default function CreditsPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

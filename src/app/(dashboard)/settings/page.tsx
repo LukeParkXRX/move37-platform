@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Navbar from "@/components/layout/Navbar";
 import { MOCK_CURRENT_USER } from "@/lib/constants/mock-data";
 import { useToast, ConfirmDialog } from "@/components/ui";
 
@@ -232,8 +231,6 @@ export default function SettingsPage() {
         backgroundColor: "var(--color-black)",
       }}
     >
-      <Navbar />
-
       <main
         style={{
           maxWidth: 1100,

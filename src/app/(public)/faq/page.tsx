@@ -1,7 +1,5 @@
 "use client";
 
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -77,7 +75,6 @@ const faqCategories = [
 export default function FAQPage() {
   return (
     <>
-      <Navbar />
       <main style={{ paddingTop: 56 }}>
         {/* Hero */}
         <section style={{ padding: "80px 24px 48px" }}>
@@ -184,7 +181,6 @@ export default function FAQPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
 import { ENABLERS } from "@/lib/constants/mock-data";
 import type { EnablerBadge } from "@/types";
 
@@ -459,8 +458,6 @@ export default function MatchingPage() {
         fontFamily: "var(--font-body)",
       }}
     >
-      <Navbar />
-
       {/* Page shell: below 56px navbar */}
       <div
         style={{

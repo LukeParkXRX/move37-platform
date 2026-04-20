@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -596,7 +594,6 @@ export default function InsightsPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--color-black)" }}>
-      <Navbar />
 
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
       <section
@@ -919,7 +916,6 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <Footer />
     </div>
   );
 }

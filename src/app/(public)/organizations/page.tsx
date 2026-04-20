@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -78,7 +76,6 @@ const STEPS = [
 export default function OrganizationsPage() {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--color-black)" }}>
-      <Navbar />
 
       <main style={{ paddingTop: 56 }}>
         {/* ── HERO ── */}
@@ -374,8 +371,6 @@ export default function OrganizationsPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

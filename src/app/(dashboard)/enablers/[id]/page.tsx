@@ -2,7 +2,6 @@
 
 import { useState, use } from "react";
 import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
 import { ENABLERS, REVIEWS, INSIGHTS } from "@/lib/constants/mock-data";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -179,8 +178,6 @@ export default function EnablerProfilePage({ params }: { params: Promise<{ id: s
         fontFamily: "var(--font-body)",
       }}
     >
-      <Navbar />
-
       {/* Back breadcrumb */}
       <div
         style={{

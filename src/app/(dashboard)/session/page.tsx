@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Navbar from "@/components/layout/Navbar";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -211,8 +210,6 @@ export default function SessionPage() {
         fontFamily: "var(--font-body)",
       }}
     >
-      <Navbar />
-
       {/* Main layout — below 56px navbar */}
       <div
         style={{
