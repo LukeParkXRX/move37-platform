@@ -23,6 +23,8 @@ const PUBLIC_ROUTES = [
   "/forgot-password",
   "/unauthorized",
   "/verify-email",
+  "/auth",
+  "/onboarding",
   "/sitemap.xml",
   "/robots.txt",
 ];
