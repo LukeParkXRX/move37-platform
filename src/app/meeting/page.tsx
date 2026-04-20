@@ -72,7 +72,7 @@ export default function MeetingLobby() {
               color: "var(--color-text)",
             }}
           >
-            Move 37
+            Get It Done
           </span>
         </Link>
       </header>

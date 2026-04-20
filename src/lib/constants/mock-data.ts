@@ -262,8 +262,8 @@ export const MOCK_USERS: (User & { startup?: StartupProfile })[] = [
   },
   {
     id: "super1",
-    email: "ops@move37.io",
-    fullName: "Move37 운영팀",
+    email: "ops@getitdonework.com",
+    fullName: "Get It Done 운영팀",
     role: "super_admin",
     isVerified: true,
     createdAt: "2025-08-01",

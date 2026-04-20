@@ -1,4 +1,6 @@
-# move37
+# Get It Done at Work
+
+실행으로 연결하는 한·미 스타트업 파트너 — getitdonework.com
 
 To install dependencies:
 

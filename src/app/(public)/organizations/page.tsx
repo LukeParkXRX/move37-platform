@@ -130,7 +130,7 @@ export default function OrganizationsPage() {
               }}
             >
               KOTRA, 창업진흥원, 민간 액셀러레이터 등 기관이 운영하는 미국 진출 지원
-              프로그램을 Move 37으로 관리하세요. 크레딧 배분부터 세션 관리, 성과 리포트까지
+              프로그램을 Get It Done at Work로 관리하세요. 크레딧 배분부터 세션 관리, 성과 리포트까지
               한 곳에서.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>

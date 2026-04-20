@@ -758,7 +758,7 @@ export default function EnablersPage() {
                 }}
               >
                 액셀러레이터, VC, 기업벤처캐피털을 위한 전용 플랫폼.
-                포트폴리오 전체에 Move 37 Enabler 네트워크를 제공하세요.
+                포트폴리오 전체에 Get It Done at Work Enabler 네트워크를 제공하세요.
               </p>
               <Link
                 href="/organizations"

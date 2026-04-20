@@ -115,7 +115,7 @@ export default function CasesPage() {
               스타트업들
             </h1>
             <p style={{ fontSize: 17, color: "var(--color-dim)", lineHeight: 1.7 }}>
-              Move 37을 통해 미국 시장에서 실질적인 성과를 만들어낸 스타트업들의 이야기입니다.
+              Get It Done at Work를 통해 미국 시장에서 실질적인 성과를 만들어낸 스타트업들의 이야기입니다.
             </p>
           </div>
         </section>

@@ -106,7 +106,7 @@ export default function Navbar() {
           <Link
             href="/"
             className="flex items-center gap-2.5 shrink-0 group"
-            aria-label="Move 37 홈"
+            aria-label="Get It Done 홈"
           >
             <span
               className="inline-flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-transform duration-200 group-hover:scale-105"
@@ -125,7 +125,7 @@ export default function Navbar() {
                 color: "var(--color-text)",
               }}
             >
-              Move 37
+              Get It Done
             </span>
           </Link>
 

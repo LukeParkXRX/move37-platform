@@ -353,7 +353,7 @@ export default function SignupPage() {
                   letterSpacing: "-0.02em",
                 }}
               >
-                Move 37
+                Get It Done
               </span>
             </div>
           </div>
@@ -392,7 +392,7 @@ export default function SignupPage() {
                 marginBottom: "20px",
               }}
             >
-              Move 37은 단순한 멘토링이 아닙니다.
+              Get It Done at Work는 단순한 멘토링이 아닙니다.
               <br />
               실제{" "}
               <span style={{ color: "var(--color-accent)", position: "relative", display: "inline-block" }}>
@@ -466,7 +466,7 @@ export default function SignupPage() {
                   marginBottom: "16px",
                 }}
               >
-                "Move 37 덕분에 Wharton MBA 파트너와 3주 만에 파일럿 계약을 체결했습니다.
+                "Get It Done 덕분에 Wharton MBA 파트너와 3주 만에 파일럿 계약을 체결했습니다.
                 혼자였다면 6개월은 걸렸을 일입니다."
               </p>
 
@@ -563,7 +563,7 @@ export default function SignupPage() {
                   </svg>
                 </div>
                 <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "15px", color: "var(--color-text)", letterSpacing: "-0.02em" }}>
-                  Move 37
+                  Get It Done
                 </span>
               </div>
             </div>

@@ -235,7 +235,7 @@ export default function ContactPage() {
                       <label style={labelStyle}>소속 / 회사</label>
                       <input
                         type="text"
-                        placeholder="Move 37 Inc."
+                        placeholder="Get It Done at Work Inc."
                         style={inputStyle}
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
@@ -319,10 +319,10 @@ export default function ContactPage() {
                     이메일
                   </p>
                   <a
-                    href="mailto:hello@move37.io"
+                    href="mailto:hello@getitdonework.com"
                     style={{ fontSize: 16, fontWeight: 700, color: "var(--color-accent)", textDecoration: "none", display: "block", marginBottom: 4 }}
                   >
-                    hello@move37.io
+                    hello@getitdonework.com
                   </a>
                   <p style={{ fontSize: 13, color: "var(--color-dim)" }}>일반 문의</p>
                 </div>
@@ -340,10 +340,10 @@ export default function ContactPage() {
                     기관 파트너십
                   </p>
                   <a
-                    href="mailto:partners@move37.io"
+                    href="mailto:partners@getitdonework.com"
                     style={{ fontSize: 16, fontWeight: 700, color: "var(--color-blue)", textDecoration: "none", display: "block", marginBottom: 4 }}
                   >
-                    partners@move37.io
+                    partners@getitdonework.com
                   </a>
                   <p style={{ fontSize: 13, color: "var(--color-dim)" }}>KOTRA, 창진원, 액셀러레이터 등</p>
                 </div>

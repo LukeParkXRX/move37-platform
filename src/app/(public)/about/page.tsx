@@ -45,7 +45,7 @@ export default function AboutPage() {
             }}
           />
           <div style={{ maxWidth: 780, margin: "0 auto", position: "relative" }}>
-            <Eyebrow>About Move 37</Eyebrow>
+            <Eyebrow>About Get It Done at Work</Eyebrow>
             <h1
               style={{
                 fontFamily: "var(--font-display)",
@@ -67,7 +67,7 @@ export default function AboutPage() {
                 whiteSpace: "pre-line",
               }}
             >
-              {`Move 37은 2016년 AlphaGo가 인간 챔피언을 상대로 두었던 전설적인 37번째 수에서 이름을 따왔습니다. 상식을 뛰어넘어 새로운 판을 만든다는 의미입니다.\n\n한국 스타트업이 미국 시장에서 그 한 수를 찾을 수 있도록, Move 37이 함께합니다.`}
+              {`Get It Done at Work는 "실행"으로 승부합니다. 조언이 아닌 현지에서 직접 움직이는 파트너. 한국 스타트업이 미국 시장에서 결과를 만들 수 있도록, Get It Done at Work가 함께합니다.`}
             </p>
           </div>
         </section>
@@ -114,7 +114,7 @@ export default function AboutPage() {
                   whiteSpace: "pre-line",
                 }}
               >
-                {`대부분의 한국 스타트업이 미국 진출에서 실패하는 이유는 좋은 제품이 없어서가 아닙니다. 현지 네트워크, 뉘앙스, 첫 고객을 여는 방법을 모르기 때문입니다.\n\nMove 37은 이 갭을 미국 현지 MBA 인재(Enabler)와의 직접 연결로 해결합니다.`}
+                {`대부분의 한국 스타트업이 미국 진출에서 실패하는 이유는 좋은 제품이 없어서가 아닙니다. 현지 네트워크, 뉘앙스, 첫 고객을 여는 방법을 모르기 때문입니다.\n\nGet It Done at Work는 이 갭을 미국 현지 MBA 인재(Enabler)와의 직접 연결로 해결합니다.`}
               </p>
             </div>
 
@@ -204,7 +204,7 @@ export default function AboutPage() {
                   color: "var(--color-text)",
                 }}
               >
-                Move 37 팀
+                Get It Done at Work 팀
               </h2>
             </div>
 

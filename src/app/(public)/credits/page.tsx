@@ -134,7 +134,7 @@ export default function CreditsPage() {
               lineHeight: 1.7,
             }}
           >
-            Move37의 크레딧은 기관이 구매하고 스타트업이 사용하는 세션 단위
+            Get It Done at Work의 크레딧은 기관이 구매하고 스타트업이 사용하는 세션 단위
             화폐입니다. 투명한 구조로 세션 비용을 관리하고, 필요한 만큼만
             사용하세요.
           </p>

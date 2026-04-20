@@ -49,7 +49,7 @@ export default function Footer() {
                 className="text-[16px] font-bold tracking-tight"
                 style={{ fontFamily: "var(--font-display)", color: "var(--color-text)" }}
               >
-                Move 37
+                Get It Done
               </span>
             </Link>
             <p className="text-[15px] leading-relaxed max-w-[280px]" style={{ color: "var(--color-dim)" }}>
@@ -59,9 +59,9 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-2.5 mt-6">
               {[
-                { label: "LinkedIn", icon: "in", href: "https://linkedin.com/company/move37" },
-                { label: "X", icon: "𝕏", href: "https://x.com/move37_io" },
-                { label: "이메일", icon: "@", href: "mailto:hello@move37.io" },
+                { label: "LinkedIn", icon: "in", href: "https://linkedin.com/company/getitdonework" },
+                { label: "X", icon: "𝕏", href: "https://x.com/getitdonework" },
+                { label: "이메일", icon: "@", href: "mailto:hello@getitdonework.com" },
               ].map((s) => (
                 <a
                   key={s.label}
@@ -110,7 +110,7 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <p className="text-xs" style={{ color: "var(--color-dim)" }}>
-              © {new Date().getFullYear()} Move 37. All rights reserved.
+              © {new Date().getFullYear()} Get It Done at Work. All rights reserved.
             </p>
             <p className="text-xs" style={{ color: "var(--color-dim)", marginTop: 4 }}>
               (주)엑스알엑스 | 대표: 박규현 | 사업자등록번호: 000-00-00000 | 서울특별시 강남구

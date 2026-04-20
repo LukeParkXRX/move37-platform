@@ -872,7 +872,7 @@ export default function InsightsPage() {
                 width: "100%",
               }}
             >
-              Move 37의 Market Enabler라면 누구든 인사이트를 기고할 수 있습니다.
+              Get It Done at Work의 Market Enabler라면 누구든 인사이트를 기고할 수 있습니다.
               당신의 경험이 다음 한국 스타트업의 결정적 한 수가 됩니다.
             </p>
           </div>

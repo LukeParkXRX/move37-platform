@@ -86,7 +86,7 @@ export default function CareersPage() {
                 marginBottom: 20,
               }}
             >
-              Move 37과 함께{" "}
+              Get It Done at Work와 함께{" "}
               <span style={{ color: "var(--color-accent)" }}>판을 바꿀</span>{" "}
               사람
             </h1>

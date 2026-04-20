@@ -73,7 +73,7 @@ export default function PrivacyPage() {
             }}
           >
             <p>
-              Move 37(이하 "회사")은 「개인정보 보호법」, 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」 등 관련 법령을 준수하며,
+              Get It Done at Work(이하 "회사")은 「개인정보 보호법」, 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」 등 관련 법령을 준수하며,
               이용자의 개인정보를 소중히 보호합니다. 본 방침은 회사가 수집·이용·보유·파기하는 개인정보의 처리에 관한 사항을 안내합니다.
             </p>
           </div>
@@ -243,7 +243,7 @@ export default function PrivacyPage() {
                     <li><strong style={{ color: "var(--color-text)" }}>이의제기권</strong>: 자동화된 결정(알고리즘 매칭 등)에 대한 이의 제기</li>
                   </ul>
                 </li>
-                <li>권리 행사는 이메일(privacy@move37.co) 또는 서비스 내 설정 메뉴를 통해 요청할 수 있으며, 회사는 10일 이내에 조치 결과를 통보합니다.</li>
+                <li>권리 행사는 이메일(privacy@getitdonework.com) 또는 서비스 내 설정 메뉴를 통해 요청할 수 있으며, 회사는 10일 이내에 조치 결과를 통보합니다.</li>
                 <li>법정 대리인은 만 14세 미만 아동의 개인정보에 대한 열람·수정·삭제를 요청할 수 있습니다. (현재 서비스는 만 19세 이상만 가입 가능)</li>
               </ol>
             </Section>
@@ -272,8 +272,8 @@ export default function PrivacyPage() {
                 }}
               >
                 <p><strong style={{ color: "var(--color-text)" }}>개인정보 보호책임자(CPO)</strong></p>
-                <p>소속: Move 37 운영팀</p>
-                <p>이메일: privacy@move37.co</p>
+                <p>소속: Get It Done at Work 운영팀</p>
+                <p>이메일: privacy@getitdonework.com</p>
                 <p>문의 처리 기간: 영업일 기준 5일 이내 답변</p>
               </div>
               <p style={{ marginTop: "12px" }}>
@@ -297,7 +297,7 @@ export default function PrivacyPage() {
               }}
             >
               <p>시행일: 2026년 4월 20일</p>
-              <p>Move 37 운영팀 · privacy@move37.co</p>
+              <p>Get It Done at Work 운영팀 · privacy@getitdonework.com</p>
             </div>
           </div>
         </div>

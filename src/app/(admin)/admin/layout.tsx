@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               letterSpacing: "-0.02em",
             }}
           >
-            Move37
+            Get It Done
           </span>
           <span
             style={{
@@ -162,7 +162,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 textOverflow: "ellipsis",
               }}
             >
-              Move37 운영팀
+              Get It Done 운영팀
             </div>
             <div
               style={{

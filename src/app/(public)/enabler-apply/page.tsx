@@ -918,7 +918,7 @@ export default function EnablerApplyPage() {
               letterSpacing: "-0.02em",
             }}
           >
-            Move 37
+            Get It Done
           </span>
         </Link>
       </div>
@@ -958,7 +958,7 @@ export default function EnablerApplyPage() {
                 lineHeight: 1.6,
               }}
             >
-              Move 37 마켓 이네이블러로 활동하고 싶으신가요? 아래 정보를 입력해주세요.
+              Get It Done at Work 마켓 이네이블러로 활동하고 싶으신가요? 아래 정보를 입력해주세요.
             </p>
           </div>
         )}

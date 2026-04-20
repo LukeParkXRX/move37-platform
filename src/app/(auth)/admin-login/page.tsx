@@ -85,7 +85,7 @@ export default function AdminLoginPage() {
               letterSpacing: "-0.02em",
             }}
           >
-            Move 37
+            Get It Done
           </span>
           <span
             style={{

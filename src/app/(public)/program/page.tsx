@@ -88,7 +88,7 @@ export default function ProgramPage() {
               className="max-w-[560px]"
               style={{ fontSize: 18, color: "var(--color-dim)", lineHeight: 1.7 }}
             >
-              Move 37은 단순 멘토링이 아닙니다. 검증된 MBA Enabler가 직접 실행에
+              Get It Done at Work은 단순 멘토링이 아닙니다. 검증된 MBA Enabler가 직접 실행에
               참여해 미국 시장 진출을 돕는 실행 중심 플랫폼입니다.
             </p>
             <div className="flex gap-3 mt-9 flex-wrap">
@@ -264,7 +264,7 @@ export default function ProgramPage() {
               className="max-w-[680px] mb-10"
               style={{ fontSize: 16, color: "var(--color-dim)" }}
             >
-              Move 37의 Enabler는 미국 Top MBA 재학·졸업생 중 실제 업무 경험을
+              Get It Done at Work의 Enabler는 미국 Top MBA 재학·졸업생 중 실제 업무 경험을
               보유한 전문가들입니다. 현지 네트워크와 실전 경험을 바탕으로 스타트업의
               미국 진출을 직접 실행합니다.
             </p>

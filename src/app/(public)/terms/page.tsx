@@ -75,8 +75,8 @@ export default function TermsPage() {
             {/* 제1조 */}
             <Section title="제1조 (목적)">
               <p>
-                본 약관은 Move 37(이하 "회사")이 운영하는 크레딧 기반 실행 컨설팅 플랫폼
-                Move 37(이하 "서비스")의 이용 조건 및 절차, 회사와 이용자 간의 권리·의무 및
+                본 약관은 Get It Done at Work(이하 "회사")이 운영하는 크레딧 기반 실행 컨설팅 플랫폼
+                Get It Done at Work(이하 "서비스")의 이용 조건 및 절차, 회사와 이용자 간의 권리·의무 및
                 책임 사항, 기타 필요한 사항을 규정함을 목적으로 합니다.
               </p>
             </Section>
@@ -86,7 +86,7 @@ export default function TermsPage() {
               <p>본 약관에서 사용하는 용어의 정의는 다음과 같습니다.</p>
               <ol>
                 <li>
-                  <strong style={{ color: "var(--color-text)" }}>"서비스"</strong>란 회사가 제공하는 Move 37 플랫폼 전반(웹사이트, API, 화상 세션 연결 등)을 의미합니다.
+                  <strong style={{ color: "var(--color-text)" }}>"서비스"</strong>란 회사가 제공하는 Get It Done at Work 플랫폼 전반(웹사이트, API, 화상 세션 연결 등)을 의미합니다.
                 </li>
                 <li>
                   <strong style={{ color: "var(--color-text)" }}>"이용자"</strong>란 본 약관에 동의하고 서비스를 이용하는 모든 자를 말하며, Startup(스타트업) 사용자와 Enabler(멘토) 사용자를 포함합니다.
@@ -169,7 +169,7 @@ export default function TermsPage() {
             {/* 제6조 */}
             <Section title="제6조 (회원 탈퇴 및 계정 삭제)">
               <ol>
-                <li>이용자는 언제든지 서비스 내 설정 메뉴 또는 이메일(support@move37.co)을 통해 탈퇴를 요청할 수 있습니다.</li>
+                <li>이용자는 언제든지 서비스 내 설정 메뉴 또는 이메일(support@getitdonework.com)을 통해 탈퇴를 요청할 수 있습니다.</li>
                 <li>탈퇴 처리 시 잔여 크레딧은 즉시 소멸하며, 환불되지 않습니다. 단, 관련 법령이 정한 환불 사유에 해당하는 경우 예외로 합니다.</li>
                 <li>탈퇴 후에도 전자상거래법 등 관련 법령에 따라 일정 기간 거래 기록이 보존됩니다(개인정보처리방침 참조).</li>
                 <li>회사는 다음 사유에 해당하는 이용자의 계정을 사전 고지 후(긴급 시 사후 고지) 강제 탈퇴 또는 이용 정지할 수 있습니다.
@@ -298,7 +298,7 @@ export default function TermsPage() {
               }}
             >
               <p>시행일: 2026년 4월 20일</p>
-              <p>Move 37 운영팀 · support@move37.co</p>
+              <p>Get It Done at Work 운영팀 · support@getitdonework.com</p>
             </div>
           </div>
         </div>
