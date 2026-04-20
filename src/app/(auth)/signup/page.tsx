@@ -2,254 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FieldLabel, FieldInput, FieldSelect, useToast } from "@/components/ui";
-import { signUpWithEmail, signInWithGoogle } from "@/lib/supabase/auth";
-
-type TabMode = "startup" | "enabler";
-
-// ── Startup Form ───────────────────────────────────────────────────────────────
-
-interface StartupFormProps {
-  onSubmit: (data: { name: string; email: string; password: string }) => void;
-  loading: boolean;
-}
-
-function StartupForm({ onSubmit, loading }: StartupFormProps) {
-  const [name, setName] = useState("");
-  const [title, setTitle] = useState("");
-  const [company, setCompany] = useState("");
-  const [email, setEmail] = useState("");
-  const [industry, setIndustry] = useState("");
-  const [password, setPassword] = useState("");
-
-  const INDUSTRY_OPTIONS = [
-    { label: "SaaS", value: "saas" },
-    { label: "Fintech", value: "fintech" },
-    { label: "E-commerce", value: "ecommerce" },
-    { label: "Healthcare", value: "healthcare" },
-    { label: "AI / DeepTech", value: "ai_deeptech" },
-    { label: "Other", value: "other" },
-  ];
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    onSubmit({ name, email, password });
-  }
-
-  return (
-    <form id="signup-form" onSubmit={handleSubmit}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-        <div>
-          <FieldLabel>이름</FieldLabel>
-          <FieldInput placeholder="홍길동" value={name} onChange={setName} required />
-        </div>
-        <div>
-          <FieldLabel>직함</FieldLabel>
-          <FieldInput placeholder="CEO, CTO, ..." value={title} onChange={setTitle} />
-        </div>
-      </div>
-
-      <div>
-        <FieldLabel>회사명</FieldLabel>
-        <FieldInput placeholder="Acme Corp" value={company} onChange={setCompany} required />
-      </div>
-
-      <div>
-        <FieldLabel>이메일</FieldLabel>
-        <FieldInput type="email" placeholder="you@company.com" value={email} onChange={setEmail} required />
-      </div>
-
-      <div>
-        <FieldLabel>산업군</FieldLabel>
-        <FieldSelect
-          value={industry}
-          onChange={setIndustry}
-          options={INDUSTRY_OPTIONS}
-          placeholder="산업군 선택"
-        />
-      </div>
-
-      <div>
-        <FieldLabel>비밀번호</FieldLabel>
-        <FieldInput type="password" placeholder="8자 이상" value={password} onChange={setPassword} required />
-      </div>
-    </div>
-    </form>
-  );
-}
-
-// ── Enabler Form ───────────────────────────────────────────────────────────────
-
-const SPECIALTY_OPTIONS = [
-  "B2B SaaS",
-  "Fintech",
-  "E-commerce",
-  "Healthcare",
-  "AI / DeepTech",
-  "Business Development",
-  "Legal & Compliance",
-  "Marketing & Growth",
-];
-
-const DEGREE_OPTIONS = [
-  { label: "MBA", value: "mba" },
-  { label: "MS / Engineering", value: "ms_eng" },
-  { label: "JD", value: "jd" },
-  { label: "PhD", value: "phd" },
-  { label: "Undergraduate", value: "undergrad" },
-];
-
-interface EnablerFormProps {
-  onSubmit: (data: { name: string; email: string }) => void;
-  loading: boolean;
-}
-
-function EnablerForm({ onSubmit, loading }: EnablerFormProps) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [degree, setDegree] = useState("");
-  const [specialties, setSpecialties] = useState<string[]>([]);
-  const [linkedin, setLinkedin] = useState("");
-
-  function toggleSpecialty(s: string) {
-    setSpecialties((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-    );
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    onSubmit({ name, email });
-  }
-
-  return (
-    <form id="signup-form" onSubmit={handleSubmit}>
-    <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-        <div>
-          <FieldLabel>이름</FieldLabel>
-          <FieldInput placeholder="Jane Smith" value={name} onChange={setName} required />
-        </div>
-        <div>
-          <FieldLabel>학위 유형</FieldLabel>
-          <FieldSelect
-            value={degree}
-            onChange={setDegree}
-            options={DEGREE_OPTIONS}
-            placeholder="학위 선택"
-          />
-        </div>
-      </div>
-
-      <div>
-        <FieldLabel>대학 이메일 (.edu)</FieldLabel>
-        <FieldInput
-          type="email"
-          placeholder="j.smith@stanford.edu"
-          value={email}
-          onChange={setEmail}
-          required
-        />
-      </div>
-
-      <div>
-        <FieldLabel>전문 분야 (복수 선택)</FieldLabel>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "7px", marginTop: "2px" }}>
-          {SPECIALTY_OPTIONS.map((s) => {
-            const active = specialties.includes(s);
-            return (
-              <button
-                key={s}
-                type="button"
-                onClick={() => toggleSpecialty(s)}
-                style={{
-                  padding: "4px 11px",
-                  borderRadius: "var(--radius-full)",
-                  fontSize: "12px",
-                  fontFamily: "var(--font-body)",
-                  fontWeight: active ? 600 : 400,
-                  border: `1px solid ${active ? "var(--color-accent)" : "var(--color-border)"}`,
-                  backgroundColor: active
-                    ? "oklch(0.91 0.2 110 / 0.1)"
-                    : "oklch(0.14 0.005 280 / 0.5)",
-                  color: active ? "var(--color-accent)" : "var(--color-dim)",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  lineHeight: 1.6,
-                }}
-              >
-                {s}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div>
-        <FieldLabel>LinkedIn URL</FieldLabel>
-        <FieldInput
-          placeholder="linkedin.com/in/janesmith"
-          value={linkedin}
-          onChange={setLinkedin}
-        />
-      </div>
-    </div>
-    </form>
-  );
-}
-
-// ── Main Page ──────────────────────────────────────────────────────────────────
+import { signInWithGoogle } from "@/lib/supabase/auth";
 
 export default function SignupPage() {
-  const [activeTab, setActiveTab] = useState<TabMode>("startup");
   const [loading, setLoading] = useState(false);
 
-  const router = useRouter();
-  const toast = useToast();
-
-  async function handleStartupSubmit(data: { name: string; email: string; password: string }) {
-    setLoading(true);
-    try {
-      const { error } = await signUpWithEmail(data.email, data.password, {
-        full_name: data.name,
-        role: "startup",
-      });
-      if (error) {
-        toast.error(error.message);
-        setLoading(false);
-        return;
-      }
-      toast.success("가입이 완료되었습니다. 이메일을 확인해 주세요.");
-      router.push("/login");
-    } catch {
-      toast.error("가입 중 오류가 발생했습니다.");
-      setLoading(false);
-    }
-  }
-
-  async function handleEnablerSubmit(data: { name: string; email: string }) {
-    setLoading(true);
-    try {
-      const { error } = await signUpWithEmail(data.email, "tempPass123!", {
-        full_name: data.name,
-        role: "enabler",
-      });
-      if (error) {
-        toast.error(error.message);
-        setLoading(false);
-        return;
-      }
-      toast.success("가입이 완료되었습니다. 이메일을 확인해 주세요.");
-      router.push("/login");
-    } catch {
-      toast.error("가입 중 오류가 발생했습니다.");
-      setLoading(false);
-    }
-  }
-
   async function handleGoogleSignup() {
+    setLoading(true);
     await signInWithGoogle();
   }
 
@@ -508,7 +267,7 @@ export default function SignupPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════
-            RIGHT HALF — Signup form panel
+            RIGHT HALF — Google signup panel
         ═══════════════════════════════════════════════════════════ */}
         <div
           style={{
@@ -537,7 +296,7 @@ export default function SignupPage() {
 
           <div
             style={{
-              maxWidth: "440px",
+              maxWidth: "420px",
               width: "100%",
               margin: "0 auto",
               position: "relative",
@@ -545,7 +304,7 @@ export default function SignupPage() {
             }}
           >
             {/* ── Logo ── */}
-            <div style={{ marginBottom: "32px", animation: "var(--animate-fade-in)" }}>
+            <div style={{ marginBottom: "40px", animation: "var(--animate-fade-in)" }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
                 <div
                   style={{
@@ -569,187 +328,82 @@ export default function SignupPage() {
             </div>
 
             {/* ── Heading ── */}
-            <div style={{ marginBottom: "28px", animation: "var(--animate-slide-up)", animationDelay: "0.05s" }}>
+            <div style={{ marginBottom: "40px", animation: "var(--animate-slide-up)", animationDelay: "0.05s" }}>
               <h1
                 style={{
                   fontFamily: "var(--font-display)",
                   fontWeight: 800,
-                  fontSize: "24px",
+                  fontSize: "26px",
                   color: "var(--color-text)",
                   letterSpacing: "-0.03em",
                   lineHeight: 1.2,
-                  marginBottom: "6px",
+                  marginBottom: "10px",
                 }}
               >
-                계정 만들기
+                시작하기
               </h1>
-              <p style={{ fontSize: "14px", fontFamily: "var(--font-body)", color: "var(--color-dim)", lineHeight: 1.5 }}>
-                미국 시장 진출의 첫 걸음을 시작하세요.
+              <p style={{ fontSize: "14px", fontFamily: "var(--font-body)", color: "var(--color-dim)", lineHeight: 1.6 }}>
+                Google 계정 하나로 시작합니다. 역할은 로그인 후 선택해요.
               </p>
-            </div>
-
-            {/* ── Tab switcher ── */}
-            <div
-              style={{
-                display: "flex",
-                backgroundColor: "oklch(0.14 0.005 280 / 0.8)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-lg)",
-                padding: "3px",
-                marginBottom: "28px",
-                animation: "var(--animate-slide-up)",
-                animationDelay: "0.1s",
-              }}
-            >
-              {(
-                [
-                  { key: "startup" as TabMode, label: "스타트업 / 기업" },
-                  { key: "enabler" as TabMode, label: "Market Enabler" },
-                ] as const
-              ).map((tab) => {
-                const active = activeTab === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setActiveTab(tab.key)}
-                    style={{
-                      flex: 1,
-                      padding: "8px 12px",
-                      borderRadius: "var(--radius-md)",
-                      fontSize: "13px",
-                      fontFamily: "var(--font-display)",
-                      fontWeight: active ? 700 : 500,
-                      color: active ? "oklch(0.1 0 0)" : "var(--color-dim)",
-                      backgroundColor: active ? "var(--color-accent)" : "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      transition: "all 0.2s var(--ease-out-expo)",
-                      letterSpacing: active ? "-0.01em" : "0",
-                      boxShadow: active ? "0 1px 6px oklch(0.91 0.2 110 / 0.25)" : "none",
-                    }}
-                  >
-                    {tab.key === "startup" ? "🚀 " : "🇺🇸 "}
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* ── Form content ── */}
-            <div
-              key={activeTab}
-              style={{
-                animation: "var(--animate-slide-up)",
-                animationDuration: "0.28s",
-              }}
-            >
-              {activeTab === "startup" ? (
-                <StartupForm onSubmit={handleStartupSubmit} loading={loading} />
-              ) : (
-                <EnablerForm onSubmit={handleEnablerSubmit} loading={loading} />
-              )}
-            </div>
-
-            {/* ── Submit button ── */}
-            <div style={{ marginTop: "24px", animation: "var(--animate-slide-up)", animationDelay: "0.15s" }}>
-              <button
-                type="submit"
-                form="signup-form"
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  padding: "13px 20px",
-                  borderRadius: "var(--radius-lg)",
-                  backgroundColor: "var(--color-accent)",
-                  color: "oklch(0.1 0 0)",
-                  fontSize: "14px",
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 700,
-                  border: "none",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  letterSpacing: "-0.01em",
-                  transition: "opacity 0.15s ease, transform 0.15s ease",
-                  boxShadow: "var(--shadow-accent)",
-                  opacity: loading ? 0.65 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
-                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading) {
-                    (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                  }
-                }}
-              >
-                {loading
-                  ? "처리 중..."
-                  : activeTab === "startup"
-                  ? "스타트업으로 시작하기"
-                  : "Enabler로 등록하기"}
-              </button>
-            </div>
-
-            {/* ── Divider ── */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" }}>
-              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
-              <span style={{ fontSize: "11px", fontFamily: "var(--font-body)", color: "var(--color-dim)", letterSpacing: "0.06em", flexShrink: 0 }}>
-                또는
-              </span>
-              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
             </div>
 
             {/* ── Google signup button ── */}
             <button
               type="button"
               onClick={handleGoogleSignup}
+              disabled={loading}
               style={{
                 width: "100%",
-                padding: "11px 20px",
+                padding: "15px 20px",
                 borderRadius: "var(--radius-lg)",
                 backgroundColor: "transparent",
                 border: "1px solid var(--color-border)",
                 color: "var(--color-text)",
-                fontSize: "14px",
+                fontSize: "15px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "10px",
+                gap: "12px",
                 transition: "border-color 0.15s ease, background-color 0.15s ease",
+                marginBottom: "28px",
+                animation: "var(--animate-slide-up)",
+                animationDelay: "0.1s",
+                opacity: loading ? 0.65 : 1,
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "oklch(0.4 0.008 280)";
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "oklch(0.14 0.005 280 / 0.5)";
+                if (!loading) {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "oklch(0.4 0.008 280)";
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "oklch(0.14 0.005 280 / 0.5)";
+                }
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)";
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                if (!loading) {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)";
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                }
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Google로 계속하기
+              {loading ? "연결 중..." : "Google로 시작하기"}
             </button>
 
-            {/* ── Bottom link ── */}
+            {/* ── 로그인 링크 ── */}
             <p
               style={{
                 textAlign: "center",
-                marginTop: "24px",
                 fontSize: "13px",
                 fontFamily: "var(--font-body)",
                 color: "var(--color-dim)",
+                animation: "var(--animate-slide-up)",
+                animationDelay: "0.15s",
               }}
             >
               이미 계정이 있으신가요?{" "}

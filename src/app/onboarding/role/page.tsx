@@ -53,6 +53,8 @@ export default function OnboardingRolePage() {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [fullName, setFullName] = useState("");
   const [extraField, setExtraField] = useState("");
+  const [altEmail, setAltEmail] = useState("");
+  const [altEmailError, setAltEmailError] = useState("");
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
@@ -94,6 +96,16 @@ export default function OnboardingRolePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedRole) return;
+
+    // 추가 연락 이메일 형식 검증 (입력값 있을 때만)
+    if (altEmail.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(altEmail.trim())) {
+        setAltEmailError("올바른 이메일 형식이 아닙니다.");
+        return;
+      }
+    }
+    setAltEmailError("");
     setLoading(true);
 
     try {
@@ -111,6 +123,7 @@ export default function OnboardingRolePage() {
         full_name: fullName,
         role: selectedRole as UserRole,
         is_verified: auth.user.email_confirmed_at !== null,
+        contact_email: altEmail.trim() || null,
       } satisfies Partial<DbUser> & { id: string; email: string; full_name: string });
 
       if (userError) throw userError;
@@ -369,6 +382,93 @@ export default function OnboardingRolePage() {
                   />
                 </div>
               )}
+
+              {/* ── 선택 사항 구분선 ── */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginTop: "4px",
+                }}
+              >
+                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontFamily: "var(--font-body)",
+                    color: "oklch(0.38 0.005 280)",
+                    letterSpacing: "0.06em",
+                    flexShrink: 0,
+                  }}
+                >
+                  선택 사항
+                </span>
+                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
+              </div>
+
+              {/* ── 추가 연락 이메일 ── */}
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "12px",
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 600,
+                    color: "var(--color-dim)",
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                    marginBottom: "6px",
+                  }}
+                >
+                  추가 연락 이메일
+                </label>
+                <input
+                  type="email"
+                  value={altEmail}
+                  onChange={(e) => {
+                    setAltEmail(e.target.value);
+                    setAltEmailError("");
+                  }}
+                  placeholder="personal@gmail.com"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "var(--radius-lg)",
+                    border: `1px solid ${altEmailError ? "oklch(0.65 0.2 25)" : "var(--color-border)"}`,
+                    backgroundColor: "oklch(0.14 0.005 280 / 0.5)",
+                    color: "var(--color-text)",
+                    fontSize: "14px",
+                    fontFamily: "var(--font-body)",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+                {altEmailError ? (
+                  <p
+                    style={{
+                      marginTop: "5px",
+                      fontSize: "12px",
+                      fontFamily: "var(--font-body)",
+                      color: "oklch(0.65 0.2 25)",
+                    }}
+                  >
+                    {altEmailError}
+                  </p>
+                ) : (
+                  <p
+                    style={{
+                      marginTop: "5px",
+                      fontSize: "12px",
+                      fontFamily: "var(--font-body)",
+                      color: "oklch(0.38 0.005 280)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    공지·알림을 받을 다른 이메일이 있다면 입력하세요. 비워두면 Google 이메일로 받습니다.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 

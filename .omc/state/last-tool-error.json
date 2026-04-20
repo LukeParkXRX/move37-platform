@@ -1,7 +1,7 @@
 {
   "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"vercel domains add getitdonework.com 2>&1\",\"timeout\":30000,\"description\":\"Full vercel domains add output\"}",
-  "error": "Exit code 1\nRetrieving project…\nAdding domain getitdonework.com to project move37\n{\n  \"status\": \"error\",\n  \"reason\": \"alias_conflict\",\n  \"message\": \"Cannot add getitdonework.com since it's already assigned to another project. (400)\",\n  \"next\": [\n    {\n      \"command\": \"vercel domains inspect getitdonework.com\",\n      \"when\": \"to inspect domain configuration and ownership\"\n    },\n    {\n      \"command\": \"vercel domains buy getitdonework.com\",\n      \"when\": \"user must run interactively in a termina...",
-  "timestamp": "2026-04-20T15:05:24.513Z",
+  "tool_input_preview": "{\"command\":\"supabase inspect db role-configurations 2>&1 | head -10; echo \\\"---check trigger exists---\\\"; SUPABASE_DB_URL=\\\"postgres://postgres.isgkgywrkonlqrhfipes:$(grep SUPABASE_SERVICE_ROLE_KEY .e...",
+  "error": "Exit code 1\nTools to inspect your Supabase database\n\nUsage:\n  supabase inspect db [command]\n\nAvailable Commands:\n  bloat                Estimates space allocated to a relation that is full of dead tuples\n  blocking             Show queries that are holding locks and the queries that are waiting for them to be released\n  calls                Show queries from pg_stat_statements ordered by total times called\n  db-stats             Show stats such as cache hit rates, total sizes, and WAL size\n---ch...",
+  "timestamp": "2026-04-20T16:30:54.115Z",
   "retry_count": 1
 }

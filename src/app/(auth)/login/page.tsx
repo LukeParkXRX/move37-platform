@@ -2,16 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { FieldLabel, FieldInput, useToast } from "@/components/ui";
-import { signInWithEmail, signInWithGoogle } from "@/lib/supabase/auth";
+import { useSearchParams } from "next/navigation";
+import { useToast } from "@/components/ui";
+import { signInWithGoogle } from "@/lib/supabase/auth";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useToast();
 
@@ -21,35 +18,13 @@ export default function LoginPage() {
     }
   }, [searchParams, toast]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const { error } = await signInWithEmail(email, password);
-      if (error) {
-        toast.error(
-          error.message === "Invalid login credentials"
-            ? "이메일 또는 비밀번호가 올바르지 않습니다."
-            : error.message
-        );
-        setLoading(false);
-        return;
-      }
-      const redirect = searchParams.get("redirect") || "/my";
-      router.push(redirect);
-    } catch {
-      toast.error("로그인 중 오류가 발생했습니다.");
-      setLoading(false);
-    }
-  }
-
   async function handleGoogleLogin() {
+    setLoading(true);
     await signInWithGoogle();
   }
 
   return (
     <>
-      {/* 반응형: 모바일에서 왼쪽 패널 숨김 */}
       <style>{`
         @media (max-width: 767px) {
           .auth-left-panel { display: none !important; }
@@ -305,7 +280,7 @@ export default function LoginPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════
-            RIGHT HALF — Login form panel
+            RIGHT HALF — Google-only login panel
         ═══════════════════════════════════════════════════════════ */}
         <div
           style={{
@@ -335,7 +310,7 @@ export default function LoginPage() {
 
           <div
             style={{
-              maxWidth: "440px",
+              maxWidth: "420px",
               width: "100%",
               margin: "0 auto",
               position: "relative",
@@ -343,7 +318,7 @@ export default function LoginPage() {
             }}
           >
             {/* ── Logo ── */}
-            <div style={{ marginBottom: "32px", animation: "var(--animate-fade-in)" }}>
+            <div style={{ marginBottom: "40px", animation: "var(--animate-fade-in)" }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
                 <div
                   style={{
@@ -367,22 +342,22 @@ export default function LoginPage() {
             </div>
 
             {/* ── Heading ── */}
-            <div style={{ marginBottom: "28px", animation: "var(--animate-slide-up)", animationDelay: "0.05s" }}>
+            <div style={{ marginBottom: "40px", animation: "var(--animate-slide-up)", animationDelay: "0.05s" }}>
               <h1
                 style={{
                   fontFamily: "var(--font-display)",
                   fontWeight: 800,
-                  fontSize: "24px",
+                  fontSize: "26px",
                   color: "var(--color-text)",
                   letterSpacing: "-0.03em",
                   lineHeight: 1.2,
-                  marginBottom: "6px",
+                  marginBottom: "10px",
                 }}
               >
-                로그인
+                Get It Done에 로그인
               </h1>
-              <p style={{ fontSize: "14px", fontFamily: "var(--font-body)", color: "var(--color-dim)", lineHeight: 1.5 }}>
-                계정에 로그인하세요.
+              <p style={{ fontSize: "14px", fontFamily: "var(--font-body)", color: "var(--color-dim)", lineHeight: 1.6 }}>
+                한국 스타트업과 미국 MBA를 실행으로 연결합니다
               </p>
             </div>
 
@@ -390,141 +365,103 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleGoogleLogin}
+              disabled={loading}
               style={{
                 width: "100%",
-                padding: "13px 20px",
+                padding: "15px 20px",
                 borderRadius: "var(--radius-lg)",
                 backgroundColor: "transparent",
                 border: "1px solid var(--color-border)",
                 color: "var(--color-text)",
-                fontSize: "14px",
+                fontSize: "15px",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: loading ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "10px",
+                gap: "12px",
                 transition: "border-color 0.15s ease, background-color 0.15s ease",
-                marginBottom: "20px",
+                marginBottom: "32px",
                 animation: "var(--animate-slide-up)",
                 animationDelay: "0.1s",
+                opacity: loading ? 0.65 : 1,
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "oklch(0.4 0.008 280)";
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "oklch(0.14 0.005 280 / 0.5)";
+                if (!loading) {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "oklch(0.4 0.008 280)";
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "oklch(0.14 0.005 280 / 0.5)";
+                }
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)";
-                (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                if (!loading) {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border)";
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+                }
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Google로 계속하기
+              {loading ? "연결 중..." : "Google로 계속하기"}
             </button>
 
-            {/* ── Divider ── */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
-              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
-              <span style={{ fontSize: "11px", fontFamily: "var(--font-body)", color: "var(--color-dim)", letterSpacing: "0.06em", flexShrink: 0 }}>
-                또는 이메일로
-              </span>
-              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
-            </div>
-
-            {/* ── Login form ── */}
-            <form
-              onSubmit={handleSubmit}
-              style={{ animation: "var(--animate-slide-up)", animationDuration: "0.28s" }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: "18px", marginBottom: "24px" }}>
-                <div>
-                  <FieldLabel>이메일</FieldLabel>
-                  <FieldInput
-                    type="email"
-                    placeholder="you@company.com"
-                    value={email}
-                    onChange={setEmail}
-                    required
-                  />
-                </div>
-                <div>
-                  <FieldLabel>비밀번호</FieldLabel>
-                  <FieldInput
-                    type="password"
-                    placeholder="비밀번호 입력"
-                    value={password}
-                    onChange={setPassword}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* ── Submit button ── */}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  padding: "13px 20px",
-                  borderRadius: "var(--radius-lg)",
-                  backgroundColor: "var(--color-accent)",
-                  color: "oklch(0.1 0 0)",
-                  fontSize: "14px",
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 700,
-                  border: "none",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  letterSpacing: "-0.01em",
-                  transition: "opacity 0.15s ease, transform 0.15s ease",
-                  boxShadow: "var(--shadow-accent)",
-                  opacity: loading ? 0.65 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    (e.currentTarget as HTMLButtonElement).style.opacity = "0.88";
-                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading) {
-                    (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-                    (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
-                  }
-                }}
-              >
-                {loading ? "로그인 중..." : "로그인"}
-              </button>
-            </form>
-
-            {/* ── Bottom link ── */}
+            {/* ── 이용약관 ── */}
             <p
               style={{
                 textAlign: "center",
-                marginTop: "24px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontFamily: "var(--font-body)",
                 color: "var(--color-dim)",
+                lineHeight: 1.6,
+                marginBottom: "32px",
+                animation: "var(--animate-slide-up)",
+                animationDelay: "0.15s",
               }}
             >
-              계정이 없으신가요?{" "}
+              로그인하면{" "}
               <Link
-                href="/signup"
-                style={{
-                  color: "var(--color-accent)",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  transition: "opacity 0.15s",
-                }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.75")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")}
+                href="/terms"
+                style={{ color: "var(--color-dim)", textDecoration: "underline", textUnderlineOffset: "2px" }}
               >
-                회원가입
+                이용약관
+              </Link>
+              과{" "}
+              <Link
+                href="/privacy"
+                style={{ color: "var(--color-dim)", textDecoration: "underline", textUnderlineOffset: "2px" }}
+              >
+                개인정보처리방침
+              </Link>
+              에 동의하게 됩니다
+            </p>
+
+            {/* ── 관리자 링크 ── */}
+            <p
+              style={{
+                textAlign: "center",
+                fontSize: "11px",
+                fontFamily: "var(--font-body)",
+                color: "oklch(0.32 0.005 280)",
+                animation: "var(--animate-slide-up)",
+                animationDelay: "0.2s",
+              }}
+            >
+              관리자라면?{" "}
+              <Link
+                href="/admin-login"
+                style={{
+                  color: "oklch(0.38 0.005 280)",
+                  textDecoration: "none",
+                  transition: "color 0.15s",
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "var(--color-dim)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "oklch(0.38 0.005 280)")}
+              >
+                관리자 로그인 →
               </Link>
             </p>
           </div>

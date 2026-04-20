@@ -13,6 +13,7 @@ export interface DbUser {
   avatar_url: string | null;
   org_id: string | null;
   is_verified: boolean;
+  contact_email?: string | null;
   created_at: string;
 }
 
