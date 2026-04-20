@@ -17,6 +17,14 @@ const PUBLIC_ROUTES = [
   "/admin-login",
   "/organizations",
   "/program",
+  "/terms",
+  "/privacy",
+  "/refund",
+  "/forgot-password",
+  "/unauthorized",
+  "/verify-email",
+  "/sitemap.xml",
+  "/robots.txt",
 ];
 
 const AUTH_ROUTES = ["/login", "/signup"];
