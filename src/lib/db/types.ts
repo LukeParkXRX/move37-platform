@@ -86,6 +86,22 @@ export interface DbCreditTransaction {
   created_at: string;
 }
 
+export type ProjectStatus = "draft" | "open" | "matched" | "in_progress" | "completed" | "cancelled";
+
+export interface DbProject {
+  id: string;
+  startup_id: string;
+  title: string;
+  category: string;
+  description: string;
+  duration: string | null;
+  budget: string | null;
+  requirements: string[];
+  attachment_url: string | null;
+  status: ProjectStatus;
+  created_at: string;
+}
+
 export interface DbReview {
   id: string;
   author_id: string;
@@ -138,6 +154,7 @@ export interface Database {
       insights: { Row: DbInsight; Insert: Partial<DbInsight> & Pick<DbInsight, "author_id" | "title">; Update: Partial<DbInsight>; Relationships: [] };
       credit_settings: { Row: DbCreditSetting; Insert: Partial<DbCreditSetting> & Pick<DbCreditSetting, "session_type">; Update: Partial<DbCreditSetting>; Relationships: [] };
       credit_expiry_policies: { Row: DbCreditExpiryPolicy; Insert: Partial<DbCreditExpiryPolicy>; Update: Partial<DbCreditExpiryPolicy>; Relationships: [] };
+      projects: { Row: DbProject; Insert: Partial<DbProject> & Pick<DbProject, "startup_id" | "title" | "category" | "description">; Update: Partial<DbProject>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: {

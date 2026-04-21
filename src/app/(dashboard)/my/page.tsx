@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  MOCK_CURRENT_USER,
-  BOOKINGS,
-  CREDIT_TRANSACTIONS,
-  ENABLERS,
-} from "@/lib/constants/mock-data";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { createClient } from "@/lib/supabase/client";
+import type { DbBooking, DbCreditTransaction } from "@/lib/db/types";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -36,6 +34,9 @@ const TX_TYPE_LABELS: Record<string, string> = {
   hold: "홀드",
   confirm: "차감",
   release: "반환",
+  use: "사용",
+  refund: "환불",
+  expire: "만료",
 };
 
 const SESSION_TYPE_LABELS: Record<string, string> = {
@@ -142,6 +143,9 @@ function TxIcon({ txType }: { txType: string }) {
     hold: "🔒",
     confirm: "✅",
     release: "↩️",
+    use: "📤",
+    refund: "💰",
+    expire: "⏰",
   };
   return <span style={{ fontSize: "16px" }}>{icons[txType] ?? "•"}</span>;
 }
@@ -206,30 +210,135 @@ function QuickActionButton({
   );
 }
 
+function EmptyState({ message, cta }: { message: string; cta?: { label: string; href: string } }) {
+  return (
+    <div
+      style={{
+        padding: "32px 24px",
+        textAlign: "center",
+        color: "var(--color-dim)",
+        fontSize: "15px",
+      }}
+    >
+      {message}
+      {cta && (
+        <>
+          <br />
+          <Link
+            href={cta.href}
+            style={{
+              color: "var(--color-accent)",
+              textDecoration: "none",
+              fontWeight: 600,
+            }}
+          >
+            {cta.label} →
+          </Link>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function MyDashboardPage() {
-  const user = MOCK_CURRENT_USER;
-  const company = user.startup?.companyName ?? "";
-  const creditBalance = user.startup?.creditBalance ?? 0;
+  const router = useRouter();
+  const { user, profile, loading } = useAuth();
+  const redirected = useRef(false);
 
-  const myBookings = BOOKINGS.filter((b) => b.startupId === user.id);
-  const confirmedBookings = myBookings.filter((b) => b.status === "confirmed");
-  const completedBookings = myBookings.filter((b) => b.status === "completed");
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [confirmedBookings, setConfirmedBookings] = useState<DbBooking[]>([]);
+  const [completedBookings, setCompletedBookings] = useState<DbBooking[]>([]);
+  const [transactions, setTransactions] = useState<DbCreditTransaction[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
-  const myTransactions = CREDIT_TRANSACTIONS.filter(
-    (t) => t.startupId === user.id
-  )
-    .slice()
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    .slice(0, 5);
+  // 리디렉트 처리
+  useEffect(() => {
+    if (!loading && !user && !redirected.current) {
+      redirected.current = true;
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
 
-  const enablerMap = Object.fromEntries(
-    ENABLERS.map((e) => [e.userId, e])
-  );
+  // 실데이터 조회
+  useEffect(() => {
+    if (!user) return;
+
+    async function fetchData() {
+      setDataLoading(true);
+      const supabase = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = supabase as any;
+
+      // 크레딧 잔액 — startup_profiles.credit_balance
+      const { data: sp } = await db
+        .from("startup_profiles")
+        .select("credit_balance")
+        .eq("user_id", user!.id)
+        .single();
+      setCreditBalance(sp?.credit_balance ?? 0);
+
+      // 예약 목록
+      const { data: bookings } = await db
+        .from("bookings")
+        .select("*")
+        .eq("startup_id", user!.id)
+        .order("scheduled_at", { ascending: true });
+
+      const allBookings: DbBooking[] = bookings ?? [];
+      setConfirmedBookings(allBookings.filter((b: DbBooking) => b.status === "confirmed"));
+      setCompletedBookings(allBookings.filter((b: DbBooking) => b.status === "completed"));
+
+      // 최근 크레딧 거래 5건
+      const { data: txs } = await db
+        .from("credit_transactions")
+        .select("*")
+        .eq("startup_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      setTransactions(txs ?? []);
+
+      setDataLoading(false);
+    }
+
+    fetchData();
+  }, [user]);
+
+  // 로딩 상태
+  if (loading || dataLoading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "var(--color-black)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            color: "var(--color-dim)",
+            fontSize: "14px",
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          로딩 중...
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !profile) return null;
+
+  const displayName = profile.full_name || user.email?.split("@")[0] || "사용자";
+  const roleLabels: Record<string, string> = {
+    startup: "스타트업",
+    enabler: "Enabler",
+    org_admin: "기관 관리자",
+    super_admin: "슈퍼 어드민",
+  };
 
   return (
     <div
@@ -260,7 +369,7 @@ export default function MyDashboardPage() {
               marginBottom: "8px",
             }}
           >
-            {company}
+            {roleLabels[profile.role] ?? profile.role}
           </p>
           <h1
             style={{
@@ -280,7 +389,7 @@ export default function MyDashboardPage() {
               marginTop: "6px",
             }}
           >
-            안녕하세요, {user.fullName}님. 오늘도 미국 진출을 향해 나아가세요.
+            안녕하세요, {displayName}님. 오늘도 미국 진출을 향해 나아가세요.
           </p>
         </div>
 
@@ -364,38 +473,27 @@ export default function MyDashboardPage() {
 
             <div style={{ padding: "8px 0" }}>
               {confirmedBookings.length === 0 ? (
-                <div
-                  style={{
-                    padding: "32px 24px",
-                    textAlign: "center",
-                    color: "var(--color-dim)",
-                    fontSize: "15px",
-                  }}
-                >
-                  예정된 세션이 없습니다
-                  <br />
-                  <Link
-                    href="/matching"
+                <EmptyState
+                  message="아직 예정된 세션이 없어요"
+                  cta={{ label: "Enabler 찾아보기", href: "/matching" }}
+                />
+              ) : (
+                confirmedBookings.map((booking) => (
+                  <div
+                    key={booking.id}
                     style={{
-                      color: "var(--color-accent)",
-                      textDecoration: "none",
-                      fontWeight: 600,
+                      padding: "16px 24px",
+                      borderBottom: "1px solid var(--color-border)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
                     }}
                   >
-                    Enabler를 찾아보세요 →
-                  </Link>
-                </div>
-              ) : (
-                confirmedBookings.map((booking) => {
-                  const enabler = enablerMap[booking.enablerId];
-                  return (
                     <div
-                      key={booking.id}
                       style={{
-                        padding: "16px 24px",
-                        borderBottom: "1px solid var(--color-border)",
                         display: "flex",
-                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                         gap: "8px",
                       }}
                     >
@@ -403,109 +501,86 @@ export default function MyDashboardPage() {
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: "8px",
+                          gap: "10px",
                         }}
                       >
                         <div
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "50%",
+                            backgroundColor: "var(--color-border)",
+                            flexShrink: 0,
                           }}
-                        >
-                          {enabler?.avatarUrl ? (
-                            <img
-                              src={enabler.avatarUrl}
-                              alt={enabler.fullName}
-                              style={{
-                                width: "32px",
-                                height: "32px",
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                                flexShrink: 0,
-                              }}
-                            />
-                          ) : (
-                            <div
-                              style={{
-                                width: "32px",
-                                height: "32px",
-                                borderRadius: "50%",
-                                backgroundColor: "var(--color-border)",
-                                flexShrink: 0,
-                              }}
-                            />
-                          )}
-                          <div>
-                            <p
-                              style={{
-                                fontSize: "15px",
-                                fontFamily: "var(--font-display)",
-                                fontWeight: 700,
-                                color: "var(--color-text)",
-                                margin: 0,
-                              }}
-                            >
-                              {enabler?.fullName ?? booking.enablerId}
-                            </p>
-                            <p
-                              style={{
-                                fontSize: "13px",
-                                color: "var(--color-dim)",
-                                margin: 0,
-                              }}
-                            >
-                              {formatDate(booking.scheduledAt)}
-                            </p>
-                          </div>
+                        />
+                        <div>
+                          <p
+                            style={{
+                              fontSize: "15px",
+                              fontFamily: "var(--font-display)",
+                              fontWeight: 700,
+                              color: "var(--color-text)",
+                              margin: 0,
+                            }}
+                          >
+                            Enabler
+                          </p>
+                          <p
+                            style={{
+                              fontSize: "13px",
+                              color: "var(--color-dim)",
+                              margin: 0,
+                            }}
+                          >
+                            {formatDate(booking.scheduled_at)}
+                          </p>
                         </div>
-                        <TypeBadge type={booking.type} />
                       </div>
-
-                      {booking.brief && (
-                        <p
-                          style={{
-                            fontSize: "14px",
-                            color: "var(--color-dim)",
-                            lineHeight: 1.5,
-                            margin: 0,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {booking.brief}
-                        </p>
-                      )}
-
-                      {booking.meetingUrl && (
-                        <Link
-                          href={booking.meetingUrl}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "5px",
-                            fontSize: "13px",
-                            fontFamily: "var(--font-display)",
-                            fontWeight: 700,
-                            letterSpacing: "0.04em",
-                            color: "var(--color-accent)",
-                            backgroundColor: "rgba(188,255,0,0.08)",
-                            border: "1px solid rgba(188,255,0,0.2)",
-                            borderRadius: "6px",
-                            padding: "5px 10px",
-                            textDecoration: "none",
-                            width: "fit-content",
-                          }}
-                        >
-                          <span>▶</span> 미팅 참여
-                        </Link>
-                      )}
+                      <TypeBadge type={booking.type} />
                     </div>
-                  );
-                })
+
+                    {booking.brief && (
+                      <p
+                        style={{
+                          fontSize: "14px",
+                          color: "var(--color-dim)",
+                          lineHeight: 1.5,
+                          margin: 0,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {booking.brief}
+                      </p>
+                    )}
+
+                    {booking.meeting_url && (
+                      <Link
+                        href={booking.meeting_url}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          fontSize: "13px",
+                          fontFamily: "var(--font-display)",
+                          fontWeight: 700,
+                          letterSpacing: "0.04em",
+                          color: "var(--color-accent)",
+                          backgroundColor: "rgba(188,255,0,0.08)",
+                          border: "1px solid rgba(188,255,0,0.2)",
+                          borderRadius: "6px",
+                          padding: "5px 10px",
+                          textDecoration: "none",
+                          width: "fit-content",
+                        }}
+                      >
+                        <span>▶</span> 미팅 참여
+                      </Link>
+                    )}
+                  </div>
+                ))
               )}
             </div>
           </div>
@@ -553,23 +628,12 @@ export default function MyDashboardPage() {
             </div>
 
             <div style={{ padding: "8px 0" }}>
-              {myTransactions.length === 0 ? (
-                <div
-                  style={{
-                    padding: "32px 24px",
-                    textAlign: "center",
-                    color: "var(--color-dim)",
-                    fontSize: "15px",
-                  }}
-                >
-                  거래 내역이 없습니다
-                </div>
+              {transactions.length === 0 ? (
+                <EmptyState message="아직 거래 내역이 없어요" />
               ) : (
-                myTransactions.map((tx) => {
-                  const isPositive =
-                    tx.txType === "release" || tx.txType === "allocate";
-                  const isNegative =
-                    tx.txType === "hold" || tx.txType === "confirm";
+                transactions.map((tx) => {
+                  const isPositive = tx.tx_type === "release" || tx.tx_type === "allocate";
+                  const isNegative = tx.tx_type === "hold" || tx.tx_type === "confirm" || tx.tx_type === "use";
                   const amountColor = isPositive
                     ? "var(--color-green)"
                     : isNegative
@@ -599,7 +663,7 @@ export default function MyDashboardPage() {
                           flexShrink: 0,
                         }}
                       >
-                        <TxIcon txType={tx.txType} />
+                        <TxIcon txType={tx.tx_type} />
                       </div>
 
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -621,7 +685,7 @@ export default function MyDashboardPage() {
                               letterSpacing: "0.05em",
                             }}
                           >
-                            {TX_TYPE_LABELS[tx.txType] ?? tx.txType}
+                            {TX_TYPE_LABELS[tx.tx_type] ?? tx.tx_type}
                           </span>
                           <span
                             style={{
@@ -656,7 +720,7 @@ export default function MyDashboardPage() {
                             margin: "2px 0 0 0",
                           }}
                         >
-                          {formatShortDate(tx.createdAt)}
+                          {formatShortDate(tx.created_at)}
                         </p>
                       </div>
                     </div>
@@ -665,6 +729,39 @@ export default function MyDashboardPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Reviews — 나중 기능, 빈 상태 */}
+        <div
+          style={{
+            backgroundColor: "var(--color-card)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "12px",
+            overflow: "hidden",
+            marginBottom: "32px",
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 24px",
+              borderBottom: "1px solid var(--color-border)",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "15px",
+                fontFamily: "var(--font-display)",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "var(--color-text)",
+                margin: 0,
+              }}
+            >
+              내 리뷰
+            </h2>
+          </div>
+          <EmptyState message="아직 작성한 리뷰가 없어요" />
         </div>
 
         {/* Quick Actions */}

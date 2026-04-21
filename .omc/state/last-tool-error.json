@@ -1,7 +1,7 @@
 {
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"supabase inspect db role-configurations 2>&1 | head -10; echo \\\"---check trigger exists---\\\"; SUPABASE_DB_URL=\\\"postgres://postgres.isgkgywrkonlqrhfipes:$(grep SUPABASE_SERVICE_ROLE_KEY .e...",
-  "error": "Exit code 1\nTools to inspect your Supabase database\n\nUsage:\n  supabase inspect db [command]\n\nAvailable Commands:\n  bloat                Estimates space allocated to a relation that is full of dead tuples\n  blocking             Show queries that are holding locks and the queries that are waiting for them to be released\n  calls                Show queries from pg_stat_statements ordered by total times called\n  db-stats             Show stats such as cache hit rates, total sizes, and WAL size\n---ch...",
-  "timestamp": "2026-04-20T16:30:54.115Z",
-  "retry_count": 1
+  "tool_name": "Glob",
+  "tool_input_preview": "{\"pattern\":\"src/components/ui/**/*\",\"path\":\"/Users/a1/Desktop/Claude_Cowork/SD/move37\"}",
+  "error": "Ripgrep search timed out after 20 seconds. The search may have matched files but did not complete in time. Try searching a more specific path or pattern.",
+  "timestamp": "2026-04-20T23:53:17.333Z",
+  "retry_count": 2
 }

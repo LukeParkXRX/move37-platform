@@ -143,7 +143,7 @@ export default function OnboardingRolePage() {
       // org_admin은 별도 초대 플로우에서 처리
 
       toast.success("환영합니다! Get It Done at Work를 시작해보세요.");
-      router.push(ROLE_DEFAULTS[selectedRole]);
+      router.push("/onboarding/profile");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "오류가 발생했습니다.";
       toast.error(message);
