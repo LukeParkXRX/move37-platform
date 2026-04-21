@@ -116,7 +116,7 @@ export default function Navbar() {
                 fontFamily: "var(--font-display)",
               }}
             >
-              M
+              G
             </span>
             <span
               className="text-[16px] font-bold tracking-tight"
