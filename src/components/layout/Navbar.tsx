@@ -160,9 +160,7 @@ export default function Navbar() {
 
           {/* 우측 액션 — 데스크탑 */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
-            {loading ? (
-              <div style={{ width: "80px", height: "32px", borderRadius: "var(--radius-md)", backgroundColor: "var(--color-card)", opacity: 0.5 }} />
-            ) : isLoggedIn ? (
+            {isLoggedIn ? (
               <>
                 {/* 유저 아바타 + 이름 */}
                 <div className="flex items-center gap-2">
