@@ -14,6 +14,20 @@ export function createClient(): SupabaseClient<Database> {
   browserClient = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        // 초기화 시 네트워크 refresh 호출 비활성화 (hang 방지)
+        autoRefreshToken: true,
+        // URL hash (#access_token=...) 자동 파싱 비활성화
+        // - OAuth 는 우리 /auth/callback 이 처리하므로 불필요
+        // - 이게 true면 getSession() 이 hang 하는 경우 있음
+        detectSessionInUrl: false,
+        persistSession: true,
+        // navigator.locks API 기반 락 사용 해제 (orphaned lock 방지)
+        // 여러 탭/컴포넌트 race 리스크는 있지만 hang 보다 낫다
+        lock: async (_name, _acquireTimeout, fn) => fn(),
+      },
+    },
   );
   return browserClient;
 }
