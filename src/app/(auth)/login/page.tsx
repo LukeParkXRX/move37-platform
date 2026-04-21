@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui";
-import { signInWithGoogle } from "@/lib/supabase/auth";
+import { signInWithGoogle, signOut } from "@/lib/supabase/auth";
+import { clearStaleSupabaseAuth } from "@/lib/supabase/stale-session";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -12,14 +13,30 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const toast = useToast();
 
+  // 로그인 페이지 진입 시점에는 어떤 경우에도 깨끗한 게스트여야 한다.
+  // stale 토큰/쿠키를 정리하여 다음 OAuth 흐름이 꼬이지 않도록.
   useEffect(() => {
-    if (searchParams.get("error") === "auth") {
+    (async () => {
+      try {
+        await signOut();
+      } catch {
+        // 이미 로그아웃 상태여도 OK
+      }
+      clearStaleSupabaseAuth();
+    })();
+
+    const err = searchParams.get("error");
+    if (err === "auth") {
       toast.error("인증이 필요합니다. 로그인해 주세요.");
+    } else if (err === "auth_missing_code") {
+      toast.error("인증 정보가 없습니다. 다시 시도해 주세요.");
     }
   }, [searchParams, toast]);
 
   async function handleGoogleLogin() {
     setLoading(true);
+    // 마지막으로 한 번 더 스토리지 정리 후 OAuth 시작
+    clearStaleSupabaseAuth();
     await signInWithGoogle();
   }
 

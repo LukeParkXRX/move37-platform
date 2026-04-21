@@ -267,7 +267,7 @@ export default function Navbar() {
                   로그인
                 </Link>
                 <Link
-                  href="/signup"
+                  href="/login"
                   className="px-4 py-1.5 text-[15px] rounded-md font-bold transition-all duration-150"
                   style={{
                     backgroundColor: "var(--color-accent)",
@@ -477,7 +477,7 @@ export default function Navbar() {
                 로그인
               </Link>
               <Link
-                href="/signup"
+                href="/login"
                 onClick={() => setMenuOpen(false)}
                 className="px-4 py-3 text-sm rounded-md font-bold text-center mt-1"
                 style={{

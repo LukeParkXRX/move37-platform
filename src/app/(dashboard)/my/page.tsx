@@ -253,12 +253,13 @@ export default function MyDashboardPage() {
   const [transactions, setTransactions] = useState<DbCreditTransaction[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  // 리디렉트 처리 — 세션 없을 때만 /login으로. 미들웨어 루프 방지 위해 한 번만.
+  // 게스트 상태 확정되면 /login 으로 즉시 이동
   useEffect(() => {
     if (!loading && !user && !redirected.current) {
       redirected.current = true;
+      router.replace("/login");
     }
-  }, [loading, user]);
+  }, [loading, user, router]);
 
   // 실데이터 조회
   useEffect(() => {
@@ -319,23 +320,12 @@ export default function MyDashboardPage() {
     );
   }
 
-  // 세션 없음 — 로그인 안내 (미들웨어 루프 방지: 자동 리디렉트 안 함)
+  // 세션 없음 — 리디렉트 중 빈 화면 표시
   if (!user) {
     return (
-      <div style={{ minHeight: "100vh", backgroundColor: "var(--color-black)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-        <div style={{ maxWidth: "400px", textAlign: "center" }}>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 700, color: "var(--color-text)", marginBottom: "12px" }}>
-            세션이 만료되었어요
-          </h1>
-          <p style={{ color: "var(--color-dim)", fontSize: "14px", marginBottom: "24px", lineHeight: 1.6 }}>
-            브라우저 쿠키 문제로 세션을 읽을 수 없습니다. 다시 로그인해주세요.
-          </p>
-          <Link
-            href="/login"
-            style={{ display: "inline-block", padding: "12px 28px", borderRadius: "10px", backgroundColor: "var(--color-accent)", color: "oklch(0.1 0 0)", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "14px", textDecoration: "none" }}
-          >
-            로그인 페이지로
-          </Link>
+      <div style={{ minHeight: "100vh", backgroundColor: "var(--color-black)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "var(--color-dim)", fontSize: "14px", fontFamily: "var(--font-body)" }}>
+          로그인 페이지로 이동 중...
         </div>
       </div>
     );
