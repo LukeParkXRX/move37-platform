@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { clearStaleSupabaseAuth } from "@/lib/supabase/stale-session";
 import type { User } from "@supabase/supabase-js";
 import type { DbUser } from "@/lib/db/types";
 
@@ -12,22 +11,19 @@ interface AuthState {
   loading: boolean;
 }
 
-// getSession() 이 stale refresh_token 으로 hang 하는 경우가 있어
-// 짧은 타임아웃으로 감싼다. 타임아웃 시 브라우저 스토리지를 정리하여
-// 다음 번 부팅에서 완전히 깨끗한 게스트 상태가 되도록 한다.
-const SESSION_READ_TIMEOUT_MS = 1500;
+// 안전장치용 타임아웃. 네트워크 hang 방지 목적만.
+// 이 시간 안에 세션을 못 읽으면 일단 게스트로 렌더링 (쿠키는 지우지 않는다).
+const SESSION_READ_TIMEOUT_MS = 4000;
 
-async function getSessionWithTimeout(
+async function readSession(
   supabase: ReturnType<typeof createClient>,
 ): Promise<User | null> {
-  const sessionPromise = supabase.auth.getSession().then((res) => {
-    return res.data.session?.user ?? null;
-  });
-
+  const sessionPromise = supabase.auth
+    .getSession()
+    .then((res) => res.data.session?.user ?? null);
   const timeoutPromise = new Promise<null>((resolve) => {
     setTimeout(() => resolve(null), SESSION_READ_TIMEOUT_MS);
   });
-
   return Promise.race([sessionPromise, timeoutPromise]).catch(() => null);
 }
 
@@ -43,23 +39,20 @@ export function useAuth() {
     let mounted = true;
 
     async function bootstrap() {
+      const user = await readSession(supabase);
+      if (!mounted) return;
+
+      if (!user) {
+        setState({ user: null, profile: null, loading: false });
+        return;
+      }
+
       try {
-        const user = await getSessionWithTimeout(supabase);
-        if (!mounted) return;
-
-        if (!user) {
-          // stale 토큰으로 인한 hang 이었다면 정리
-          clearStaleSupabaseAuth();
-          setState({ user: null, profile: null, loading: false });
-          return;
-        }
-
         const { data: profile } = await supabase
           .from("users")
           .select("*")
           .eq("id", user.id)
           .single();
-
         if (!mounted) return;
         setState({
           user,
@@ -67,11 +60,8 @@ export function useAuth() {
           loading: false,
         });
       } catch (err) {
-        console.warn("[useAuth] bootstrap failed:", err);
-        if (mounted) {
-          clearStaleSupabaseAuth();
-          setState({ user: null, profile: null, loading: false });
-        }
+        console.warn("[useAuth] profile fetch failed:", err);
+        if (mounted) setState({ user, profile: null, loading: false });
       }
     }
 

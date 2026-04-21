@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui";
-import { signInWithGoogle, signOut } from "@/lib/supabase/auth";
+import { signInWithGoogle } from "@/lib/supabase/auth";
 import { clearStaleSupabaseAuth } from "@/lib/supabase/stale-session";
 
 export default function LoginPage() {
@@ -13,17 +13,11 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const toast = useToast();
 
-  // 로그인 페이지 진입 시점에는 어떤 경우에도 깨끗한 게스트여야 한다.
-  // stale 토큰/쿠키를 정리하여 다음 OAuth 흐름이 꼬이지 않도록.
+  // 페이지 진입 시점에 로컬 stale 데이터만 정리.
+  // - 미들웨어가 유효 세션은 이미 /my 로 보냈으므로, 여기 도달했다는 것은 서버 측 세션 없음.
+  // - 서버 signOut() 을 호출하지 않는다 (OAuth PKCE code_verifier 쿠키를 건드릴 위험 회피).
   useEffect(() => {
-    (async () => {
-      try {
-        await signOut();
-      } catch {
-        // 이미 로그아웃 상태여도 OK
-      }
-      clearStaleSupabaseAuth();
-    })();
+    clearStaleSupabaseAuth();
 
     const err = searchParams.get("error");
     if (err === "auth") {
@@ -35,8 +29,6 @@ export default function LoginPage() {
 
   async function handleGoogleLogin() {
     setLoading(true);
-    // 마지막으로 한 번 더 스토리지 정리 후 OAuth 시작
-    clearStaleSupabaseAuth();
     await signInWithGoogle();
   }
 
