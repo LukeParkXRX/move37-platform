@@ -22,11 +22,19 @@ export function useAuth() {
     const supabase = createClient();
     let mounted = true;
 
+    // Safety net: release loading state after 3s even if Supabase hangs
+    const timeoutId = setTimeout(() => {
+      if (mounted) {
+        console.warn("[useAuth] timeout — proceeding as guest");
+        setState((prev) => (prev.loading ? { ...prev, loading: false } : prev));
+      }
+    }, 3000);
+
     async function getUser() {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        // Use getSession (reads from cookies, fast) before getUser (validates with server)
+        const { data: sessionData } = await supabase.auth.getSession();
+        const user = sessionData.session?.user ?? null;
 
         if (!mounted) return;
 
@@ -42,8 +50,10 @@ export function useAuth() {
           setState({ user: null, profile: null, loading: false });
         }
       } catch (err) {
-        console.error("[useAuth] getUser failed:", err);
+        console.error("[useAuth] getSession failed:", err);
         if (mounted) setState({ user: null, profile: null, loading: false });
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
 
@@ -77,6 +87,7 @@ export function useAuth() {
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);

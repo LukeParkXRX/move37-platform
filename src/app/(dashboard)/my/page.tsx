@@ -267,39 +267,40 @@ export default function MyDashboardPage() {
 
     async function fetchData() {
       setDataLoading(true);
-      const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = supabase as any;
+      try {
+        const supabase = createClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const db = supabase as any;
 
-      // 크레딧 잔액 — startup_profiles.credit_balance
-      const { data: sp } = await db
-        .from("startup_profiles")
-        .select("credit_balance")
-        .eq("user_id", user!.id)
-        .single();
-      setCreditBalance(sp?.credit_balance ?? 0);
+        const { data: sp } = await db
+          .from("startup_profiles")
+          .select("credit_balance")
+          .eq("user_id", user!.id)
+          .single();
+        setCreditBalance(sp?.credit_balance ?? 0);
 
-      // 예약 목록
-      const { data: bookings } = await db
-        .from("bookings")
-        .select("*")
-        .eq("startup_id", user!.id)
-        .order("scheduled_at", { ascending: true });
+        const { data: bookings } = await db
+          .from("bookings")
+          .select("*")
+          .eq("startup_id", user!.id)
+          .order("scheduled_at", { ascending: true });
 
-      const allBookings: DbBooking[] = bookings ?? [];
-      setConfirmedBookings(allBookings.filter((b: DbBooking) => b.status === "confirmed"));
-      setCompletedBookings(allBookings.filter((b: DbBooking) => b.status === "completed"));
+        const allBookings: DbBooking[] = bookings ?? [];
+        setConfirmedBookings(allBookings.filter((b: DbBooking) => b.status === "confirmed"));
+        setCompletedBookings(allBookings.filter((b: DbBooking) => b.status === "completed"));
 
-      // 최근 크레딧 거래 5건
-      const { data: txs } = await db
-        .from("credit_transactions")
-        .select("*")
-        .eq("startup_id", user!.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
-      setTransactions(txs ?? []);
-
-      setDataLoading(false);
+        const { data: txs } = await db
+          .from("credit_transactions")
+          .select("*")
+          .eq("startup_id", user!.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        setTransactions(txs ?? []);
+      } catch (err) {
+        console.error("[my] fetchData failed:", err);
+      } finally {
+        setDataLoading(false);
+      }
     }
 
     fetchData();
