@@ -20,22 +20,30 @@ export function useAuth() {
 
   useEffect(() => {
     const supabase = createClient();
+    let mounted = true;
 
     async function getUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-      if (user) {
-        const { data: profile } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", user.id)
-          .single();
+        if (!mounted) return;
 
-        setState({ user, profile: profile as DbUser | null, loading: false });
-      } else {
-        setState({ user: null, profile: null, loading: false });
+        if (user) {
+          const { data: profile } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+          if (!mounted) return;
+          setState({ user, profile: profile as DbUser | null, loading: false });
+        } else {
+          setState({ user: null, profile: null, loading: false });
+        }
+      } catch (err) {
+        console.error("[useAuth] getUser failed:", err);
+        if (mounted) setState({ user: null, profile: null, loading: false });
       }
     }
 
@@ -44,24 +52,33 @@ export function useAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        setState({
-          user: session.user,
-          profile: profile as DbUser | null,
-          loading: false,
-        });
-      } else {
-        setState({ user: null, profile: null, loading: false });
+      try {
+        if (!mounted) return;
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+          if (!mounted) return;
+          setState({
+            user: session.user,
+            profile: profile as DbUser | null,
+            loading: false,
+          });
+        } else {
+          setState({ user: null, profile: null, loading: false });
+        }
+      } catch (err) {
+        console.error("[useAuth] onAuthStateChange failed:", err);
+        if (mounted) setState({ user: null, profile: null, loading: false });
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return state;
