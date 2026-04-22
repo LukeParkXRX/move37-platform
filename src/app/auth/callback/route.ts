@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       startup: "/my",
       enabler: "/my",
       org_admin: "/org/dashboard",
-      super_admin: "/admin",
+      super_admin: "/admin/dashboard",
     };
     destination = roleDefaults[profile.role] ?? "/my";
   }

@@ -447,32 +447,6 @@ export default function LoginPage() {
               </Link>
               에 동의하게 됩니다
             </p>
-
-            {/* ── 관리자 링크 ── */}
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: "11px",
-                fontFamily: "var(--font-body)",
-                color: "oklch(0.32 0.005 280)",
-                animation: "var(--animate-slide-up)",
-                animationDelay: "0.2s",
-              }}
-            >
-              관리자라면?{" "}
-              <Link
-                href="/admin-login"
-                style={{
-                  color: "oklch(0.38 0.005 280)",
-                  textDecoration: "none",
-                  transition: "color 0.15s",
-                }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "var(--color-dim)")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = "oklch(0.38 0.005 280)")}
-              >
-                관리자 로그인 →
-              </Link>
-            </p>
           </div>
         </div>
       </div>

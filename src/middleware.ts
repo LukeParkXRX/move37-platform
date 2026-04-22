@@ -14,7 +14,6 @@ const PUBLIC_ROUTES = [
   "/insights",
   "/login",
   "/signup",
-  "/admin-login",
   "/organizations",
   "/program",
   "/terms",
