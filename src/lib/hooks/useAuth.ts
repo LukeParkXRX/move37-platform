@@ -33,22 +33,24 @@ export function useAuth(): AuthState {
     const supabase = createClient();
     let mounted = true;
 
-    // 콜백은 SDK 내부 lock 안에서 실행되므로 동기만. 같은 client의 await는 재귀 lock → deadlock.
-    // DB 쿼리 등 비동기 작업은 queueMicrotask로 lock 밖으로 탈출시켜야 한다.
-    // 참조: https://github.com/supabase/auth-js onAuthStateChange 가이드
+    // onAuthStateChange 콜백은 SDK 내부 lock 안에서 실행 — 콜백 body에서 같은 client의
+    // await 호출은 재귀 lock 획득 시도로 deadlock. 비동기 작업은 queueMicrotask로 분리.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
 
       const user = session?.user ?? null;
-
-      // 1) user 상태는 동기 반영 — 로딩 즉시 해제
       setState((s) => ({ ...s, user, loading: false }));
 
-      // 2) profile 조회는 lock 밖 microtask에서
       if (!user) {
         setState((s) => ({ ...s, profile: null }));
+        return;
+      }
+
+      // profile은 세션이 새로 들어올 때만 조회. TOKEN_REFRESHED에서 재조회하면
+      // 장시간 열어둔 탭에서 1시간마다 불필요한 쿼리가 발생.
+      if (event !== "INITIAL_SESSION" && event !== "SIGNED_IN" && event !== "USER_UPDATED") {
         return;
       }
 

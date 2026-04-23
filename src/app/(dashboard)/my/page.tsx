@@ -253,18 +253,14 @@ export default function MyDashboardPage() {
   const [transactions, setTransactions] = useState<DbCreditTransaction[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  // 게스트 상태 확정되면 /login 으로 즉시 이동.
-  // 로그인은 됐지만 role 미선택(온보딩 미완료) 상태면 /onboarding/role로 이동.
+  // 토큰 만료 등으로 세션이 끊기면 /login 으로 이동.
+  // role 미선택/미인증 초기 차단은 서버 레이아웃 가드가 이미 처리.
   useEffect(() => {
-    if (loading || redirected.current) return;
-    if (!user) {
+    if (!loading && !user && !redirected.current) {
       redirected.current = true;
       router.replace("/login");
-    } else if (profile && !profile.role) {
-      redirected.current = true;
-      router.replace("/onboarding/role");
     }
-  }, [loading, user, profile, router]);
+  }, [loading, user, router]);
 
   // 실데이터 조회
   useEffect(() => {

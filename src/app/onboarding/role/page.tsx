@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import type { UserRole, DbUser, DbStartupProfile, DbEnablerProfile } from "@/lib/db/types";
+import { ROLE_HOME } from "@/lib/auth/roles";
 
 type Role = Extract<UserRole, "startup" | "enabler" | "org_admin">;
 
@@ -40,12 +41,6 @@ const ROLE_CARDS: RoleCard[] = [
   },
 ];
 
-const ROLE_DEFAULTS: Record<Role, string> = {
-  startup: "/my",
-  enabler: "/my",
-  org_admin: "/org/dashboard",
-};
-
 export default function OnboardingRolePage() {
   const router = useRouter();
   const toast = useToast();
@@ -77,7 +72,7 @@ export default function OnboardingRolePage() {
         .single<{ id: string; full_name: string; role: string | null }>();
 
       if (profile?.role) {
-        router.replace(ROLE_DEFAULTS[profile.role as Role] ?? "/my");
+        router.replace(ROLE_HOME[profile.role as UserRole]);
         return;
       }
 

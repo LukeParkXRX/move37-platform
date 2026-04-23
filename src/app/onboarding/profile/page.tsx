@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { useToast } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 import type { UserRole } from "@/lib/db/types";
+import { ROLE_HOME } from "@/lib/auth/roles";
 
 const INDUSTRY_OPTIONS = [
   "SaaS / B2B 소프트웨어",
@@ -27,12 +28,6 @@ const STAGE_OPTIONS = [
 ];
 
 const CREDIT_RATE_OPTIONS = [1, 2, 3, 4, 5];
-
-const ROLE_DESTINATIONS: Record<string, string> = {
-  startup: "/my",
-  enabler: "/my",
-  org_admin: "/org/dashboard",
-};
 
 const labelStyle: React.CSSProperties = {
   display: "block",
@@ -470,7 +465,7 @@ export default function OnboardingProfilePage() {
   }
 
   const role = profile.role as UserRole;
-  const destination = ROLE_DESTINATIONS[role] ?? "/my";
+  const destination = ROLE_HOME[role];
 
   return (
     <div
