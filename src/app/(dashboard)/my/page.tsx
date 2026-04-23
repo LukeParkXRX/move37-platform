@@ -253,13 +253,18 @@ export default function MyDashboardPage() {
   const [transactions, setTransactions] = useState<DbCreditTransaction[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  // 게스트 상태 확정되면 /login 으로 즉시 이동
+  // 게스트 상태 확정되면 /login 으로 즉시 이동.
+  // 로그인은 됐지만 role 미선택(온보딩 미완료) 상태면 /onboarding/role로 이동.
   useEffect(() => {
-    if (!loading && !user && !redirected.current) {
+    if (loading || redirected.current) return;
+    if (!user) {
       redirected.current = true;
       router.replace("/login");
+    } else if (profile && !profile.role) {
+      redirected.current = true;
+      router.replace("/onboarding/role");
     }
-  }, [loading, user, router]);
+  }, [loading, user, profile, router]);
 
   // 실데이터 조회
   useEffect(() => {
@@ -359,6 +364,9 @@ export default function MyDashboardPage() {
       </div>
     );
   }
+
+  // role 없으면 위 useEffect가 /onboarding/role로 리다이렉트 중 — 렌더 스킵
+  if (!profile.role) return null;
 
   const displayName = profile.full_name || user.email?.split("@")[0] || "사용자";
   const roleLabels: Record<string, string> = {

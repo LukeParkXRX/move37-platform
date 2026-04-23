@@ -9,7 +9,7 @@ export interface DbUser {
   id: string;
   email: string;
   full_name: string;
-  role: UserRole;
+  role: UserRole | null;
   avatar_url: string | null;
   org_id: string | null;
   is_verified: boolean;

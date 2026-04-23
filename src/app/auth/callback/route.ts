@@ -46,10 +46,13 @@ export async function GET(request: NextRequest) {
     .from("users")
     .select("id, role")
     .eq("id", data.user.id)
-    .single<{ id: string; role: string }>();
+    .single<{ id: string; role: string | null }>();
+
+  // 온보딩 미완료 판정: users 행 자체가 없거나(트리거 실패), role이 아직 선택 안 됨
+  const needsOnboarding = !profile || !profile.role;
 
   let destination: string;
-  if (!profile) {
+  if (needsOnboarding) {
     destination = "/onboarding/role";
   } else if (nextOverride) {
     destination = nextOverride;
@@ -60,7 +63,7 @@ export async function GET(request: NextRequest) {
       org_admin: "/org/dashboard",
       super_admin: "/admin/dashboard",
     };
-    destination = roleDefaults[profile.role] ?? "/my";
+    destination = roleDefaults[profile!.role!] ?? "/my";
   }
 
   // 최종 리디렉트 응답에 exchangeCodeForSession 이 설정한 쿠키를 모두 이전

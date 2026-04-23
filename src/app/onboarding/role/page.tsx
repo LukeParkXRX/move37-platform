@@ -68,21 +68,23 @@ export default function OnboardingRolePage() {
         return;
       }
 
-      // 이미 users 레코드가 있으면 바로 대시보드로
+      // 트리거가 users 행을 자동 생성하지만 role은 NULL.
+      // role이 이미 세팅되어 있으면 온보딩 완료 → 대시보드로 리다이렉트.
       const { data: profile } = await supabase
         .from("users")
-        .select("id, role")
+        .select("id, full_name, role")
         .eq("id", auth.user.id)
-        .single<{ id: string; role: string }>();
+        .single<{ id: string; full_name: string; role: string | null }>();
 
-      if (profile) {
+      if (profile?.role) {
         router.replace(ROLE_DEFAULTS[profile.role as Role] ?? "/my");
         return;
       }
 
-      // Google metadata에서 이름 파싱
+      // 트리거가 채운 full_name 우선, 없으면 Google metadata → email 앞부분 순
       const meta = auth.user.user_metadata;
       const name =
+        profile?.full_name ||
         meta?.full_name ||
         meta?.name ||
         auth.user.email?.split("@")[0] ||
@@ -113,18 +115,20 @@ export default function OnboardingRolePage() {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) throw new Error("Not authenticated");
 
-      // Supabase Database 타입이 insert 오버로드를 never로 추론하는 문제 — 프로젝트 전체 관행
+      // 트리거가 users 행을 id/email/full_name으로 이미 생성한 상태 — 나머지 필드를 UPDATE
+      // Supabase Database 타입이 insert/update 오버로드를 never로 추론하는 문제 — 프로젝트 전체 관행
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
 
-      const { error: userError } = await db.from("users").insert({
-        id: auth.user.id,
-        email: auth.user.email!,
-        full_name: fullName,
-        role: selectedRole as UserRole,
-        is_verified: auth.user.email_confirmed_at !== null,
-        contact_email: altEmail.trim() || null,
-      } satisfies Partial<DbUser> & { id: string; email: string; full_name: string });
+      const { error: userError } = await db
+        .from("users")
+        .update({
+          full_name: fullName,
+          role: selectedRole as UserRole,
+          is_verified: auth.user.email_confirmed_at !== null,
+          contact_email: altEmail.trim() || null,
+        } satisfies Partial<DbUser>)
+        .eq("id", auth.user.id);
 
       if (userError) throw userError;
 
