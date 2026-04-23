@@ -14,7 +14,12 @@ export function createClient() {
       auth: {
         // OAuth code exchange는 /auth/callback 라우트가 처리하므로 URL 자동 파싱 불필요
         detectSessionInUrl: false,
-        // navigator.locks 기본값 사용 — SDK 자동 싱글톤이 멀티 인스턴스 경쟁을 구조적으로 차단
+        // navigator.locks no-op 유지.
+        // 기본 lock 복원 시 React Strict Mode effect 이중 실행·HMR 리로드에서
+        // orphan lock이 발생해 onAuthStateChange의 INITIAL_SESSION이 영구 지연되는 증상 재현됨.
+        // 멀티탭 race 리스크는 SDK BroadcastChannel로 세션 동기화되므로 실사용상 영향 미미.
+        // (이전 이력: c30900b 싱글톤 도입 → e302f78 no-op lock으로 최종 해결)
+        lock: async (_name, _acquireTimeout, fn) => fn(),
       },
     },
   );
