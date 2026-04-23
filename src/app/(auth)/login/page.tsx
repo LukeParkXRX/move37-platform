@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui";
 import { signInWithGoogle } from "@/lib/supabase/auth";
-import { clearStaleSupabaseAuth } from "@/lib/supabase/stale-session";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -13,12 +12,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const toast = useToast();
 
-  // 페이지 진입 시점에 로컬 stale 데이터만 정리.
-  // - 미들웨어가 유효 세션은 이미 /my 로 보냈으므로, 여기 도달했다는 것은 서버 측 세션 없음.
-  // - 서버 signOut() 을 호출하지 않는다 (OAuth PKCE code_verifier 쿠키를 건드릴 위험 회피).
   useEffect(() => {
-    clearStaleSupabaseAuth();
-
     const err = searchParams.get("error");
     if (err === "auth") {
       toast.error("인증이 필요합니다. 로그인해 주세요.");
