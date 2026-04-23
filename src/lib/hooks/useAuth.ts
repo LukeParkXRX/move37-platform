@@ -11,23 +11,18 @@ interface AuthState {
   loading: boolean;
 }
 
-// 안전장치용 타임아웃. 네트워크 hang 방지 목적만.
-// 이 시간 안에 세션을 못 읽으면 일단 게스트로 렌더링 (쿠키는 지우지 않는다).
-const SESSION_READ_TIMEOUT_MS = 4000;
-
-async function readSession(
-  supabase: ReturnType<typeof createClient>,
-): Promise<User | null> {
-  const sessionPromise = supabase.auth
-    .getSession()
-    .then((res) => res.data.session?.user ?? null);
-  const timeoutPromise = new Promise<null>((resolve) => {
-    setTimeout(() => resolve(null), SESSION_READ_TIMEOUT_MS);
-  });
-  return Promise.race([sessionPromise, timeoutPromise]).catch(() => null);
-}
-
-export function useAuth() {
+/**
+ * 세션 상태 구독 훅.
+ *
+ * 공식 @supabase/ssr 패턴: onAuthStateChange 하나로 전체 생명주기 처리.
+ * 구독 직후 INITIAL_SESSION 이벤트가 자동 발생하므로 별도 getSession 호출 불필요.
+ * 이후 SIGNED_IN / SIGNED_OUT / TOKEN_REFRESHED 등 이벤트도 동일 핸들러로 흐름.
+ *
+ * 주의: session.user는 로컬 쿠키 기반이다. 서버 API에서 권한을 보호할 때는
+ *       반드시 서버 측 `supabase.auth.getUser()` (토큰 서버 검증)을 함께 써야 한다.
+ *       이 훅은 UI 표시용 신호에만 사용한다.
+ */
+export function useAuth(): AuthState {
   const [state, setState] = useState<AuthState>({
     user: null,
     profile: null,
@@ -38,61 +33,32 @@ export function useAuth() {
     const supabase = createClient();
     let mounted = true;
 
-    async function bootstrap() {
-      const user = await readSession(supabase);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
+
+      const user = session?.user ?? null;
 
       if (!user) {
         setState({ user: null, profile: null, loading: false });
         return;
       }
 
+      // profile 조회 실패해도 user 상태는 유지 — DB 에러가 UI 로그인 상태를 뒤집지 않도록
+      let profile: DbUser | null = null;
       try {
-        const { data: profile } = await supabase
+        const { data } = await supabase
           .from("users")
           .select("*")
           .eq("id", user.id)
-          .single();
-        if (!mounted) return;
-        setState({
-          user,
-          profile: (profile as DbUser | null) ?? null,
-          loading: false,
-        });
+          .single<DbUser>();
+        profile = data ?? null;
       } catch (err) {
         console.warn("[useAuth] profile fetch failed:", err);
-        if (mounted) setState({ user, profile: null, loading: false });
       }
-    }
 
-    bootstrap();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return;
-      if (!session?.user) {
-        setState({ user: null, profile: null, loading: false });
-        return;
-      }
-      try {
-        const { data: profile } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        if (!mounted) return;
-        setState({
-          user: session.user,
-          profile: (profile as DbUser | null) ?? null,
-          loading: false,
-        });
-      } catch (err) {
-        console.warn("[useAuth] onAuthStateChange profile fetch failed:", err);
-        if (mounted) {
-          setState({ user: session.user, profile: null, loading: false });
-        }
-      }
+      if (mounted) setState({ user, profile, loading: false });
     });
 
     return () => {

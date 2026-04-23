@@ -14,8 +14,7 @@ export function createClient() {
       auth: {
         // OAuth code exchange는 /auth/callback 라우트가 처리하므로 URL 자동 파싱 불필요
         detectSessionInUrl: false,
-        // TODO(C5): navigator.locks 정식 사용으로 복원. 현재 no-op은 orphaned lock hang 회피용 임시 조치
-        lock: async (_name, _acquireTimeout, fn) => fn(),
+        // navigator.locks 기본값 사용 — SDK 자동 싱글톤이 멀티 인스턴스 경쟁을 구조적으로 차단
       },
     },
   );
