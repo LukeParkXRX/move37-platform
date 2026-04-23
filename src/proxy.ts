@@ -31,7 +31,7 @@ function isAuthRoute(pathname: string): boolean {
   return (AUTH_ROUTES as readonly string[]).includes(pathname);
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 정적/에셋은 matcher에서 대부분 걸러지지만 안전망으로 한 번 더
