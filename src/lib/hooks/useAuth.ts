@@ -33,32 +33,38 @@ export function useAuth(): AuthState {
     const supabase = createClient();
     let mounted = true;
 
+    // 콜백은 SDK 내부 lock 안에서 실행되므로 동기만. 같은 client의 await는 재귀 lock → deadlock.
+    // DB 쿼리 등 비동기 작업은 queueMicrotask로 lock 밖으로 탈출시켜야 한다.
+    // 참조: https://github.com/supabase/auth-js onAuthStateChange 가이드
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
 
       const user = session?.user ?? null;
 
+      // 1) user 상태는 동기 반영 — 로딩 즉시 해제
+      setState((s) => ({ ...s, user, loading: false }));
+
+      // 2) profile 조회는 lock 밖 microtask에서
       if (!user) {
-        setState({ user: null, profile: null, loading: false });
+        setState((s) => ({ ...s, profile: null }));
         return;
       }
 
-      // profile 조회 실패해도 user 상태는 유지 — DB 에러가 UI 로그인 상태를 뒤집지 않도록
-      let profile: DbUser | null = null;
-      try {
-        const { data } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", user.id)
-          .single<DbUser>();
-        profile = data ?? null;
-      } catch (err) {
-        console.warn("[useAuth] profile fetch failed:", err);
-      }
-
-      if (mounted) setState({ user, profile, loading: false });
+      queueMicrotask(async () => {
+        if (!mounted) return;
+        try {
+          const { data } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", user.id)
+            .single<DbUser>();
+          if (mounted) setState((s) => ({ ...s, profile: data ?? null }));
+        } catch (err) {
+          console.warn("[useAuth] profile fetch failed:", err);
+        }
+      });
     });
 
     return () => {
