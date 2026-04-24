@@ -76,20 +76,32 @@ export default function LandingPage() {
                 </span>
               </div>
 
+              {/* Eyebrow lead-in */}
+              <p
+                className="leading-relaxed"
+                style={{
+                  fontSize: "17px",
+                  color: "var(--color-dim)",
+                  maxWidth: "520px",
+                }}
+              >
+                멘토들의 간접적인 코칭보다는
+                <br />
+                미국에서 직접 귀사의 업무를 실행해줄 파트너가 필요하다면.
+              </p>
+
               {/* Headline */}
               <div>
                 <h1
-                  className="leading-[1.08] tracking-tight"
+                  className="leading-[1.0] tracking-tight"
                   style={{
                     fontFamily: "var(--font-display)",
                     fontWeight: 900,
-                    fontSize: "clamp(40px, 5.5vw, 58px)",
-                    color: "var(--color-text)",
+                    fontSize: "clamp(56px, 8vw, 96px)",
+                    color: "var(--color-accent)",
                   }}
                 >
-                  당신의 스타트업에
-                  <br />
-                  <span style={{ color: "var(--color-accent)" }}>결정적 한 수</span>를
+                  Get It Done
                 </h1>
               </div>
 
@@ -97,14 +109,12 @@ export default function LandingPage() {
               <p
                 className="leading-relaxed"
                 style={{
-                  fontSize: "19px",
-                  color: "var(--color-dim)",
-                  maxWidth: "460px",
+                  fontSize: "18px",
+                  color: "var(--color-text)",
+                  maxWidth: "520px",
                 }}
               >
-                검증된 미국 MBA 출신 Market Enabler와 직접 연결됩니다.
-                <br />
-                GTM 전략, IR, 파트너십 — 실행 중심으로 함께합니다.
+                검증된 현지 Enabler가 GTM · IR · 파트너십을 계약 기반으로 직접 실행합니다.
               </p>
 
               {/* CTA buttons */}
