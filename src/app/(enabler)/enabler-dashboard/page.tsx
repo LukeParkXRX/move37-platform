@@ -350,7 +350,7 @@ export default async function EnablerDashboardPage() {
             gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
             gap: "12px",
           }}>
-            <Link href="/settings" style={{
+            <Link href="/enabler-dashboard/profile" style={{
               backgroundColor: "var(--color-card)",
               border: "1px solid var(--color-border)",
               borderRadius: "10px",
