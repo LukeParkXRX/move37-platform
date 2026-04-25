@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui";
 import { signInWithGoogle } from "@/lib/supabase/auth";
+import TestLoginPanel from "./TestLoginPanel";
+
+const SHOW_TEST_PANEL = process.env.NEXT_PUBLIC_SHOW_TEST_DATA === "true";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -441,6 +444,9 @@ export default function LoginPage() {
               </Link>
               에 동의하게 됩니다
             </p>
+
+            {/* ── 개발자 전용 퀵로그인 패널 (TEST MODE only) ── */}
+            {SHOW_TEST_PANEL && <TestLoginPanel />}
           </div>
         </div>
       </div>

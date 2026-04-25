@@ -1,12 +1,15 @@
 {
-  "name": "move37",
+  "name": "getitdonework",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed:test": "bun run scripts/seed-test-data.ts",
+    "seed:clear": "bun run scripts/clear-test-data.ts",
+    "seed:reset": "bun run scripts/clear-test-data.ts --yes && bun run scripts/seed-test-data.ts"
   },
   "dependencies": {
     "@livekit/components-react": "^2.9.20",
