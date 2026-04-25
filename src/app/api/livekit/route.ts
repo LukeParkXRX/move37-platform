@@ -22,9 +22,25 @@ export async function GET(request: Request) {
     const { data: profile } = await supabase.from("users").select("full_name").eq("id", user.id).single();
     const participantName = (profile as { full_name?: string } | null)?.full_name || user.email || "Participant";
 
-    // Validate booking access if room follows session pattern
+    // 화상 세션은 반드시 예약(booking)에 묶여 있어야 함. room 명은 session-{bookingId} 형식 강제.
+    // super_admin은 운영/지원 목적의 임의 room 접근 허용.
+    const { data: callerRaw } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const callerRole = (callerRaw as { role: string | null } | null)?.role;
+    const isSuperAdmin = callerRole === "super_admin";
+
     const sessionMatch = roomName.match(/^session-(.+)$/);
-    if (sessionMatch) {
+    if (!sessionMatch) {
+      if (!isSuperAdmin) {
+        return NextResponse.json(
+          { error: "Meeting rooms must be linked to a booking" },
+          { status: 403 },
+        );
+      }
+    } else {
       const bookingId = sessionMatch[1];
       const { data: bookingRaw } = await supabase
         .from("bookings")
@@ -38,13 +54,9 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Booking not found" }, { status: 404 });
       }
 
-      if (booking.startup_id !== user.id && booking.enabler_id !== user.id) {
-        // Allow super_admin too
-        const { data: adminCheckRaw } = await supabase.from("users").select("role").eq("id", user.id).single();
-        const adminCheck = adminCheckRaw as { role: string } | null;
-        if (adminCheck?.role !== "super_admin") {
-          return NextResponse.json({ error: "Not a participant of this session" }, { status: 403 });
-        }
+      const isParticipant = booking.startup_id === user.id || booking.enabler_id === user.id;
+      if (!isParticipant && !isSuperAdmin) {
+        return NextResponse.json({ error: "Not a participant of this session" }, { status: 403 });
       }
 
       if (!["pending", "confirmed"].includes(booking.status)) {

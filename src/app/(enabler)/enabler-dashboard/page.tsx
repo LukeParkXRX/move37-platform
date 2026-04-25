@@ -353,14 +353,17 @@ export default function EnablerDashboardPage() {
                       {b.scheduled_at ? formatDate(b.scheduled_at) : "—"}
                     </p>
                   </div>
-                  <Link href="/meeting" style={{
-                    fontSize: "13px",
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 700,
-                    color: "var(--color-accent)",
-                    textDecoration: "none",
-                  }}>
-                    화상채팅 입장 →
+                  <Link
+                    href={`/meeting/session-${b.id}?name=${encodeURIComponent(displayName)}`}
+                    style={{
+                      fontSize: "13px",
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 700,
+                      color: "var(--color-accent)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    참여하기 →
                   </Link>
                 </div>
               ))}

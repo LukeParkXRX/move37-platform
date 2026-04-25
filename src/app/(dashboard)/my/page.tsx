@@ -588,29 +588,27 @@ export default function MyDashboardPage() {
                       </p>
                     )}
 
-                    {booking.meeting_url && (
-                      <Link
-                        href={booking.meeting_url}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          fontSize: "13px",
-                          fontFamily: "var(--font-display)",
-                          fontWeight: 700,
-                          letterSpacing: "0.04em",
-                          color: "var(--color-accent)",
-                          backgroundColor: "rgba(188,255,0,0.08)",
-                          border: "1px solid rgba(188,255,0,0.2)",
-                          borderRadius: "6px",
-                          padding: "5px 10px",
-                          textDecoration: "none",
-                          width: "fit-content",
-                        }}
-                      >
-                        <span>▶</span> 미팅 참여
-                      </Link>
-                    )}
+                    <Link
+                      href={`/meeting/session-${booking.id}?name=${encodeURIComponent(displayName)}`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        fontSize: "13px",
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 700,
+                        letterSpacing: "0.04em",
+                        color: "var(--color-accent)",
+                        backgroundColor: "rgba(188,255,0,0.08)",
+                        border: "1px solid rgba(188,255,0,0.2)",
+                        borderRadius: "6px",
+                        padding: "5px 10px",
+                        textDecoration: "none",
+                        width: "fit-content",
+                      }}
+                    >
+                      <span>▶</span> 미팅 참여
+                    </Link>
                   </div>
                 ))
               )}

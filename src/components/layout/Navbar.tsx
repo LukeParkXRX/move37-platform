@@ -12,30 +12,28 @@ type Role = "startup" | "enabler" | "org_admin" | "super_admin";
 const GUEST_NAV_LINKS = [
   { label: "Enabler 찾기", href: "/enablers" },
   { label: "프로젝트 등록", href: "/projects/new" },
-  { label: "화상채팅", href: "/meeting" },
   { label: "인사이트", href: "/insights" },
   { label: "기업 서비스", href: "/organizations" },
 ];
 
+// 화상 세션은 본인 예약(booking)에 한해서만 입장 가능. 메뉴에서는 제거하고
+// 각 역할의 대시보드 "다가오는 세션" 카드에서 booking 단위로 진입한다.
 const ROLE_NAV_LINKS: Record<Role, { label: string; href: string }[]> = {
   startup: [
     { label: "Enabler 찾기", href: "/enablers" },
     { label: "매칭", href: "/matching" },
     { label: "내 대시보드", href: "/my" },
-    { label: "화상채팅", href: "/meeting" },
     { label: "인사이트", href: "/insights" },
   ],
   enabler: [
     { label: "내 대시보드", href: "/enabler-dashboard" },
     { label: "세션 관리", href: "/session" },
-    { label: "화상채팅", href: "/meeting" },
     { label: "인사이트", href: "/insights" },
   ],
   org_admin: [
     { label: "기관 대시보드", href: "/org/dashboard" },
     { label: "크레딧 관리", href: "/org/credits" },
     { label: "세션 이력", href: "/org/dashboard" },
-    { label: "화상채팅", href: "/meeting" },
     { label: "인사이트", href: "/insights" },
   ],
   super_admin: [
@@ -43,7 +41,6 @@ const ROLE_NAV_LINKS: Record<Role, { label: string; href: string }[]> = {
     { label: "기관 관리", href: "/admin/orgs" },
     { label: "Enabler 관리", href: "/admin/enablers" },
     { label: "사용자", href: "/admin/users" },
-    { label: "화상채팅", href: "/meeting" },
   ],
 };
 
