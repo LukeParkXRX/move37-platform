@@ -328,7 +328,19 @@ function EnablerCard({
 
 // ─── EnablersList (메인 export) ───────────────────────────────────────────────
 
-export default function EnablersList({ enablers }: { enablers: EnablerListItem[] }) {
+export type EnablerListStats = {
+  enablerCount: number;
+  completedSessions: number;
+  avgRating: number;
+};
+
+export default function EnablersList({
+  enablers,
+  stats,
+}: {
+  enablers: EnablerListItem[];
+  stats: EnablerListStats;
+}) {
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterCategory>("전체");
 
@@ -493,10 +505,12 @@ export default function EnablersList({ enablers }: { enablers: EnablerListItem[]
           }}
         >
           {[
-            { value: "6명", label: "검증된 Enabler" },
-            { value: "156+", label: "완료된 세션" },
-            { value: "4.8", label: "평균 평점" },
-            { value: "73%", label: "재요청률" },
+            { value: `${stats.enablerCount}명`, label: "검증된 Enabler" },
+            { value: `${stats.completedSessions}회`, label: "완료된 세션" },
+            {
+              value: stats.avgRating > 0 ? stats.avgRating.toFixed(1) : "—",
+              label: "평균 평점",
+            },
           ].map((stat) => (
             <div key={stat.label} className="flex items-center gap-3">
               <span

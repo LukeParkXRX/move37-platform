@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { shouldShowTestData } from "@/lib/test-mode";
-import EnablersList, { type EnablerListItem } from "./EnablersList";
+import EnablersList, { type EnablerListItem, type EnablerListStats } from "./EnablersList";
 import type { EnablerBadge } from "@/types";
 
 // ─── 원시 행 타입 ─────────────────────────────────────────────────────────────
@@ -93,10 +93,46 @@ async function fetchEnabler(): Promise<EnablerListItem[]> {
   });
 }
 
+// ─── 통계 fetch ───────────────────────────────────────────────────────────────
+
+async function fetchStats(): Promise<EnablerListStats> {
+  const supabase = await createServerSupabaseClient();
+  const showTest = await shouldShowTestData();
+
+  // 1) 검증된(approved) enabler 수 — 공개 페이지와 동일한 필터 (is_test 포함)
+  let enablerQuery = supabase
+    .from("enabler_profiles")
+    .select("rating, users!inner ( is_test, role )", { count: "exact", head: false })
+    .eq("status", "approved")
+    .eq("users.role", "enabler");
+  if (!showTest) enablerQuery = enablerQuery.eq("users.is_test", false);
+
+  const { data: enablerRows, count: enablerCount } = await enablerQuery;
+
+  const ratings = (enablerRows ?? [])
+    .map((r) => Number((r as { rating: number | string }).rating))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const avgRating = ratings.length
+    ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+    : 0;
+
+  // 2) 완료된 세션 수
+  const { count: completedSessions } = await supabase
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "completed");
+
+  return {
+    enablerCount: enablerCount ?? 0,
+    completedSessions: completedSessions ?? 0,
+    avgRating,
+  };
+}
+
 // ─── 페이지 ───────────────────────────────────────────────────────────────────
 
 export default async function EnablersPage() {
-  const enablers = await fetchEnabler();
+  const [enablers, stats] = await Promise.all([fetchEnabler(), fetchStats()]);
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--color-black)" }}>
@@ -181,7 +217,7 @@ export default async function EnablersPage() {
         </section>
 
         {/* ── 검색 + 필터 + 그리드 (클라이언트) ───────────────────────── */}
-        <EnablersList enablers={enablers} />
+        <EnablersList enablers={enablers} stats={stats} />
 
         {/* ── CTA 배너 ───────────────────────────────────────────────── */}
         <section style={{ padding: "0 20px 80px 20px" }}>
