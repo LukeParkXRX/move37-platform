@@ -47,6 +47,25 @@ export async function POST(request: Request) {
     const { data: setting } = await db.from("credit_settings").select("credits_required").eq("session_type", type).single();
     const creditsAmount = setting?.credits_required ?? 0;
 
+    // Chemistry 1회 제한 검증
+    if (type === "chemistry") {
+      const { data: existing } = await db
+        .from("bookings")
+        .select("id")
+        .eq("startup_id", user.id)
+        .eq("enabler_id", enabler_id)
+        .in("status", ["pending", "confirmed", "completed"])
+        .eq("type", "chemistry")
+        .limit(1)
+        .maybeSingle();
+      if (existing) {
+        return NextResponse.json(
+          { error: "이 Enabler와의 Chemistry Call은 1회만 사용 가능합니다." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Create booking
     const { data: booking, error } = await db.from("bookings").insert({
       startup_id: user.id,
