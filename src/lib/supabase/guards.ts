@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "./server";
+import { ROLE_HOME } from "@/lib/auth/roles";
 import type { UserRole } from "@/lib/db/types";
 
 /**
@@ -33,7 +34,10 @@ export const requireRole = cache(async function requireRole(
   }
 
   if (!allowedRoles.includes(profile.role)) {
-    redirect("/my");
+    // 권한 부족 → 본인 역할의 home으로. 무한 리다이렉트 방지를 위해
+    // 현재 home과 같으면 안전 fallback("/")으로.
+    const home = ROLE_HOME[profile.role];
+    redirect(home === fallbackRedirect ? "/" : home);
   }
 
   return { userId: user.id, role: profile.role };
