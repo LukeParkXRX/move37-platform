@@ -1,6 +1,9 @@
 export { welcomeEmail } from "./welcome";
 export type { WelcomeEmailInput, EmailPayload } from "./welcome";
 
+export { bookingRequestedEmail } from "./booking-requested";
+export type { BookingRequestedInput } from "./booking-requested";
+
 export { bookingConfirmedEmail } from "./booking-confirmed";
 export type { BookingConfirmedInput, SessionType, BookingParticipantRole } from "./booking-confirmed";
 

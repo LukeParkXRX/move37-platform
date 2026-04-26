@@ -1,5 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { sendEmail, APP_URL } from "@/lib/email";
+import { bookingConfirmedEmail, bookingCancelledEmail } from "@/lib/emails/templates";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -56,9 +58,44 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         .from("bookings")
         .update({ status: "confirmed" })
         .eq("id", id)
-        .select()
+        .select("*, scheduled_at, type, brief")
         .single();
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+      // 이메일 알림: Startup에게 예약 확정 (best-effort)
+      try {
+        const [{ data: startupProfile }, { data: enablerProfile }] = await Promise.all([
+          db.from("users").select("email, full_name").eq("id", booking.startup_id).single(),
+          db.from("users").select("full_name").eq("id", booking.enabler_id).single(),
+        ]);
+        if (startupProfile?.email) {
+          const SESSION_LABEL: Record<string, string> = {
+            chemistry: "케미스트리 세션",
+            standard: "스탠다드 세션",
+            project: "프로젝트 세션",
+          };
+          const sessionDatetime = new Date(data.scheduled_at).toLocaleString("ko-KR", {
+            year: "numeric", month: "long", day: "numeric",
+            weekday: "short", hour: "2-digit", minute: "2-digit",
+            timeZone: "Asia/Seoul",
+          });
+          await sendEmail(
+            startupProfile.email,
+            bookingConfirmedEmail({
+              recipientName: startupProfile.full_name ?? "스타트업",
+              recipientRole: "startup",
+              counterpartName: enablerProfile?.full_name ?? "Enabler",
+              sessionType: (SESSION_LABEL[data.type] ?? data.type) as "Chemistry" | "Standard" | "Project",
+              sessionDatetime,
+              creditsCharged: data.credits_amount ?? 0,
+              livekitUrl: data.meeting_url ?? `${APP_URL}/bookings`,
+              briefPreview: data.brief ? String(data.brief).slice(0, 200) : undefined,
+              bookingId: id,
+            })
+          );
+        }
+      } catch { /* 이메일 실패는 무시 */ }
+
       return NextResponse.json({ booking: data });
     }
 
@@ -85,9 +122,47 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           cancel_reason: reason,
         })
         .eq("id", id)
-        .select()
+        .select("*, scheduled_at, type")
         .single();
       if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
+
+      // 이메일 알림: enabler가 거절한 경우에만 startup에게 발송 (best-effort)
+      if (isEnabler) {
+        try {
+          const [{ data: startupProfile }, { data: enablerProfile }] = await Promise.all([
+            db.from("users").select("email, full_name").eq("id", booking.startup_id).single(),
+            db.from("users").select("full_name").eq("id", booking.enabler_id).single(),
+          ]);
+          if (startupProfile?.email) {
+            const SESSION_LABEL: Record<string, string> = {
+              chemistry: "케미스트리 세션",
+              standard: "스탠다드 세션",
+              project: "프로젝트 세션",
+            };
+            const sessionDatetime = new Date(data.scheduled_at).toLocaleString("ko-KR", {
+              year: "numeric", month: "long", day: "numeric",
+              weekday: "short", hour: "2-digit", minute: "2-digit",
+              timeZone: "Asia/Seoul",
+            });
+            await sendEmail(
+              startupProfile.email,
+              bookingCancelledEmail({
+                recipientName: startupProfile.full_name ?? "스타트업",
+                counterpartName: enablerProfile?.full_name ?? "Enabler",
+                sessionType: SESSION_LABEL[data.type] ?? data.type,
+                sessionDatetime,
+                cancelledBy: "enabler",
+                cancelReason: reason !== "예약 취소" ? reason : undefined,
+                refundPolicy: "full",
+                refundedCredits: data.credits_amount ?? 0,
+                originalCredits: data.credits_amount ?? 0,
+                bookingId: id,
+              })
+            );
+          }
+        } catch { /* 이메일 실패는 무시 */ }
+      }
+
       return NextResponse.json({ booking: data });
     }
 

@@ -1,5 +1,7 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { sendEmail, APP_URL } from "@/lib/email";
+import { bookingRequestedEmail } from "@/lib/emails/templates";
 
 export async function GET(request: Request) {
   try {
@@ -97,6 +99,45 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "크레딧이 부족합니다: " + holdError.message }, { status: 400 });
       }
     }
+
+    // 이메일 알림: Enabler에게 새 예약 신청 도착 (best-effort)
+    try {
+      const { data: enablerProfile } = await db
+        .from("users")
+        .select("email, full_name")
+        .eq("id", enabler_id)
+        .single();
+      const { data: startupProfile } = await db
+        .from("users")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+
+      if (enablerProfile?.email) {
+        const SESSION_LABEL: Record<string, string> = {
+          chemistry: "케미스트리 세션",
+          standard: "스탠다드 세션",
+          project: "프로젝트 세션",
+        };
+        const sessionDatetime = new Date(scheduled_at).toLocaleString("ko-KR", {
+          year: "numeric", month: "long", day: "numeric",
+          weekday: "short", hour: "2-digit", minute: "2-digit",
+          timeZone: "Asia/Seoul",
+        });
+        await sendEmail(
+          enablerProfile.email,
+          bookingRequestedEmail({
+            enablerName: enablerProfile.full_name ?? "Enabler",
+            startupName: startupProfile?.full_name ?? "스타트업",
+            sessionType: SESSION_LABEL[type] ?? type,
+            sessionDatetime,
+            brief: brief || "",
+            bookingId: booking.id,
+            dashboardUrl: `${APP_URL}/enabler-dashboard`,
+          })
+        );
+      }
+    } catch { /* 이메일 실패는 무시 — booking 응답에 영향 없음 */ }
 
     return NextResponse.json({ booking: { ...booking, meeting_url: meetingUrl } });
   } catch { return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
