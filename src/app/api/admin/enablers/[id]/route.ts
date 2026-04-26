@@ -37,11 +37,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       .from("enabler_profiles")
       .update({ status })
       .eq("user_id", id)
-      .select()
-      .single();
+      .select();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ enabler: data });
+    if (!data || data.length === 0) {
+      // RLS 차단 또는 대상 미존재 → silent fail 방지
+      return NextResponse.json(
+        { error: "변경할 수 없습니다. 권한 또는 대상 확인 필요" },
+        { status: 403 },
+      );
+    }
+    return NextResponse.json({ enabler: data[0] });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
