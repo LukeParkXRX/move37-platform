@@ -323,10 +323,9 @@ function EnablerCard({
           >
             {enabler.creditRate}C
           </span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
+          <Link
+            href={`/enablers/${enabler.userId}`}
+            onClick={(e) => e.stopPropagation()}
             className="transition-all duration-150"
             style={{
               padding: "4px 14px",
@@ -339,16 +338,18 @@ function EnablerCard({
               border: "none",
               cursor: "pointer",
               lineHeight: 1.6,
+              textDecoration: "none",
+              display: "inline-block",
             }}
             onMouseEnter={(e) =>
-              ((e.currentTarget as HTMLButtonElement).style.opacity = "0.85")
+              ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.85")
             }
             onMouseLeave={(e) =>
-              ((e.currentTarget as HTMLButtonElement).style.opacity = "1")
+              ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")
             }
           >
             예약
-          </button>
+          </Link>
         </div>
       </div>
     </button>
