@@ -55,23 +55,33 @@ export default async function BookingsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
 
-  const { data: rawRows, error } = await db
-    .from("bookings")
-    .select(
-      `id, type, status, scheduled_at, credits_amount, brief, meeting_url,
-       cancelled_at, cancel_reason, completed_at, created_at, enabler_id,
-       enabler_user:users!bookings_enabler_id_fkey(
-         full_name,
-         avatar_url,
-         enabler_profile:enabler_profiles(university, degree_type, specialties, badge_level)
-       )`
-    )
-    .eq("startup_id", userId)
-    .order("created_at", { ascending: false });
+  const [{ data: rawRows, error }, { data: rawReviews }] = await Promise.all([
+    db
+      .from("bookings")
+      .select(
+        `id, type, status, scheduled_at, credits_amount, brief, meeting_url,
+         cancelled_at, cancel_reason, completed_at, created_at, enabler_id,
+         enabler_user:users!bookings_enabler_id_fkey(
+           full_name,
+           avatar_url,
+           enabler_profile:enabler_profiles(university, degree_type, specialties, badge_level)
+         )`
+      )
+      .eq("startup_id", userId)
+      .order("created_at", { ascending: false }),
+    db
+      .from("reviews")
+      .select("booking_id")
+      .eq("author_id", userId),
+  ]);
 
   if (error) {
-    console.error("[BookingsPage] fetch error:", error.message);
+    // fetch 실패는 빈 목록으로 처리 (console.error 금지)
   }
+
+  const reviewedSet = new Set<string>(
+    ((rawReviews as { booking_id: string }[] | null) ?? []).map((r) => r.booking_id)
+  );
 
   const rows = (rawRows as RawBookingRow[] | null) ?? [];
 
@@ -97,6 +107,7 @@ export default async function BookingsPage() {
       enabler_degree_type: ep?.degree_type ?? null,
       enabler_specialties: ep?.specialties ?? null,
       enabler_badge_level: ep?.badge_level ?? null,
+      reviewed: reviewedSet.has(r.id),
     };
   });
 

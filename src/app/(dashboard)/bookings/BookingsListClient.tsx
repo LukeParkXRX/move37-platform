@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pagination, useToast } from "@/components/ui";
+import { Pagination, useToast, Modal, StarRating } from "@/components/ui";
 
 // ── 공개 타입 (page.tsx에서 import) ───────────────────────────────────────────
 
@@ -26,6 +26,7 @@ export interface BookingWithEnabler {
   enabler_degree_type: string | null;
   enabler_specialties: string[] | null;
   enabler_badge_level: string | null;
+  reviewed?: boolean;
 }
 
 // ── 내부 타입 ─────────────────────────────────────────────────────────────────
@@ -134,11 +135,207 @@ function TypeBadge({ type }: { type: BookingType }) {
   );
 }
 
+// ── ReviewModal ───────────────────────────────────────────────────────────────
+
+function ReviewModal({
+  booking,
+  onClose,
+  onDone,
+}: {
+  booking: BookingWithEnabler;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
+
+  async function handleSubmit() {
+    if (rating === 0) {
+      toast.error("별점을 선택해주세요.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_id: booking.id,
+          target_id: booking.enabler_id,
+          rating,
+          comment: comment.trim() || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        toast.error(body.error ?? "리뷰 제출 중 오류가 발생했습니다.");
+        return;
+      }
+      toast.success("리뷰가 등록되었습니다.");
+      onDone();
+    } catch {
+      toast.error("네트워크 오류가 발생했습니다.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="리뷰 작성" size="sm">
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* Enabler 정보 */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "12px 16px",
+            backgroundColor: "var(--color-dark)",
+            borderRadius: 8,
+          }}
+        >
+          {booking.enabler_avatar_url ? (
+            <img
+              src={booking.enabler_avatar_url}
+              alt={booking.enabler_user_name ?? "이네이블러"}
+              style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                backgroundColor: "var(--color-card)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 16,
+                fontFamily: "var(--font-display)",
+                fontWeight: 700,
+                color: "var(--color-accent)",
+              }}
+            >
+              {(booking.enabler_user_name ?? "?").charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <p style={{ margin: 0, fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--color-text)" }}>
+              {booking.enabler_user_name ?? "이네이블러"}
+            </p>
+            <p style={{ margin: 0, fontFamily: "var(--font-body)", fontSize: 13, color: "var(--color-dim)" }}>
+              {TYPE_LABELS[booking.type]} 세션
+            </p>
+          </div>
+        </div>
+
+        {/* 별점 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <label
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              fontSize: 14,
+              color: "var(--color-text)",
+            }}
+          >
+            별점 <span style={{ color: "var(--color-red)" }}>*</span>
+          </label>
+          <StarRating value={rating} interactive onChange={setRating} size={28} />
+          {rating > 0 && (
+            <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--color-dim)" }}>
+              {["", "별로예요", "그저 그래요", "괜찮아요", "좋아요", "최고예요"][rating]}
+            </span>
+          )}
+        </div>
+
+        {/* 코멘트 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <label
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              fontSize: 14,
+              color: "var(--color-text)",
+            }}
+          >
+            코멘트 <span style={{ color: "var(--color-dim)", fontWeight: 400 }}>(선택)</span>
+          </label>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value.slice(0, 1000))}
+            placeholder="세션 경험을 자유롭게 남겨주세요..."
+            rows={4}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid var(--color-border)",
+              backgroundColor: "var(--color-dark)",
+              color: "var(--color-text)",
+              fontFamily: "var(--font-body)",
+              fontSize: 15,
+              resize: "vertical",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--color-dim)", alignSelf: "flex-end" }}>
+            {comment.length}/1000
+          </span>
+        </div>
+
+        {/* 버튼 */}
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: "8px 18px",
+              borderRadius: 8,
+              border: "1px solid var(--color-border)",
+              backgroundColor: "transparent",
+              color: "var(--color-dim)",
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: "pointer",
+            }}
+          >
+            취소
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || rating === 0}
+            style={{
+              padding: "8px 18px",
+              borderRadius: 8,
+              border: "none",
+              backgroundColor: rating === 0 ? "oklch(0.91 0.2 110 / 0.3)" : "var(--color-accent)",
+              color: rating === 0 ? "var(--color-dim)" : "var(--color-black)",
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: submitting || rating === 0 ? "not-allowed" : "pointer",
+              opacity: submitting ? 0.7 : 1,
+            }}
+          >
+            {submitting ? "제출 중..." : "리뷰 등록"}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 // ── ActionArea ────────────────────────────────────────────────────────────────
 
 function ActionArea({ booking }: { booking: BookingWithEnabler }) {
   const [btnHovered, setBtnHovered] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewDone, setReviewDone] = useState(false);
   const router = useRouter();
   const toast = useToast();
 
@@ -222,27 +419,49 @@ function ActionArea({ booking }: { booking: BookingWithEnabler }) {
   }
 
   if (booking.status === "completed") {
+    const alreadyReviewed = booking.reviewed || reviewDone;
     return (
-      <button
-        disabled
-        style={{
-          display: "inline-block",
-          padding: "6px 16px",
-          borderRadius: 8,
-          fontSize: 16,
-          fontFamily: "var(--font-display)",
-          fontWeight: 600,
-          border: "1px solid var(--color-border)",
-          backgroundColor: "transparent",
-          color: "var(--color-dim)",
-          cursor: "not-allowed",
-          opacity: 0.5,
-          flexShrink: 0,
-        }}
-        title="곧 지원 예정"
-      >
-        리뷰 작성
-      </button>
+      <>
+        {reviewOpen && (
+          <ReviewModal
+            booking={booking}
+            onClose={() => setReviewOpen(false)}
+            onDone={() => {
+              setReviewDone(true);
+              setReviewOpen(false);
+            }}
+          />
+        )}
+        <button
+          onClick={() => !alreadyReviewed && setReviewOpen(true)}
+          disabled={alreadyReviewed}
+          onMouseEnter={() => !alreadyReviewed && setBtnHovered(true)}
+          onMouseLeave={() => setBtnHovered(false)}
+          style={{
+            display: "inline-block",
+            padding: "6px 16px",
+            borderRadius: 8,
+            fontSize: 16,
+            fontFamily: "var(--font-display)",
+            fontWeight: 600,
+            border: alreadyReviewed
+              ? "1px solid var(--color-border)"
+              : `1px solid ${btnHovered ? "var(--color-accent)" : "var(--color-border)"}`,
+            backgroundColor: alreadyReviewed
+              ? "transparent"
+              : btnHovered
+              ? "color-mix(in oklch, var(--color-accent) 12%, transparent)"
+              : "transparent",
+            color: alreadyReviewed ? "var(--color-dim)" : btnHovered ? "var(--color-accent)" : "var(--color-dim)",
+            cursor: alreadyReviewed ? "not-allowed" : "pointer",
+            opacity: alreadyReviewed ? 0.6 : 1,
+            transition: "all 0.15s ease",
+            flexShrink: 0,
+          }}
+        >
+          {alreadyReviewed ? "리뷰 완료" : "리뷰 작성"}
+        </button>
+      </>
     );
   }
 

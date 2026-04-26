@@ -251,10 +251,20 @@ export default function MyDashboardPage() {
     enabler?: { full_name: string | null; avatar_url: string | null } | null;
   };
 
+  type MyReview = {
+    id: string;
+    rating: number;
+    comment: string | null;
+    created_at: string;
+    target_id: string;
+    enabler_name: string | null;
+  };
+
   const [creditBalance, setCreditBalance] = useState(0);
   const [confirmedBookings, setConfirmedBookings] = useState<BookingWithEnabler[]>([]);
   const [completedBookings, setCompletedBookings] = useState<BookingWithEnabler[]>([]);
   const [transactions, setTransactions] = useState<DbCreditTransaction[]>([]);
+  const [myReviews, setMyReviews] = useState<MyReview[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   // 토큰 만료 등으로 세션이 끊기면 /login 으로 이동.
@@ -325,8 +335,38 @@ export default function MyDashboardPage() {
           .order("created_at", { ascending: false })
           .limit(5);
         setTransactions(txs ?? []);
+
+        // 내가 작성한 리뷰
+        const { data: rawReviews } = await db
+          .from("reviews")
+          .select("id, rating, comment, created_at, target_id")
+          .eq("author_id", user!.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        const reviewList: Array<{ id: string; rating: number; comment: string | null; created_at: string; target_id: string }> = rawReviews ?? [];
+
+        // target(enabler) 이름 조회
+        const targetIds = Array.from(new Set(reviewList.map((r) => r.target_id)));
+        let targetNameMap = new Map<string, string>();
+        if (targetIds.length > 0) {
+          const { data: targetUsers } = await db
+            .from("users")
+            .select("id, full_name")
+            .in("id", targetIds);
+          targetNameMap = new Map(
+            ((targetUsers ?? []) as { id: string; full_name: string | null }[]).map((u) => [u.id, u.full_name ?? "알 수 없음"])
+          );
+        }
+
+        setMyReviews(
+          reviewList.map((r) => ({
+            ...r,
+            enabler_name: targetNameMap.get(r.target_id) ?? null,
+          }))
+        );
       } catch (err) {
-        console.error("[my] fetchData failed:", err);
+        void err;
       } finally {
         setDataLoading(false);
       }
@@ -810,7 +850,7 @@ export default function MyDashboardPage() {
           </div>
         </div>
 
-        {/* Reviews — 나중 기능, 빈 상태 */}
+        {/* 내 리뷰 */}
         <div
           style={{
             backgroundColor: "var(--color-card)",
@@ -824,6 +864,9 @@ export default function MyDashboardPage() {
             style={{
               padding: "20px 24px",
               borderBottom: "1px solid var(--color-border)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
             <h2
@@ -837,10 +880,86 @@ export default function MyDashboardPage() {
                 margin: 0,
               }}
             >
-              내 리뷰
+              내 리뷰 {myReviews.length > 0 && <span style={{ color: "var(--color-dim)", fontWeight: 400 }}>({myReviews.length})</span>}
             </h2>
           </div>
-          <EmptyState message="아직 작성한 리뷰가 없어요" />
+          {myReviews.length === 0 ? (
+            <EmptyState
+              message="완료된 세션 후 리뷰를 남겨주세요"
+              cta={{ label: "예약 관리로 이동", href: "/bookings" }}
+            />
+          ) : (
+            <div style={{ padding: "8px 0" }}>
+              {myReviews.map((review, idx) => (
+                <div
+                  key={review.id}
+                  style={{
+                    padding: "16px 24px",
+                    borderBottom: idx < myReviews.length - 1 ? "1px solid var(--color-border)" : "none",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                  }}
+                >
+                  {/* 상단: Enabler 이름 + 날짜 */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontWeight: 600,
+                        fontSize: "15px",
+                        color: "var(--color-text)",
+                      }}
+                    >
+                      {review.enabler_name ?? "이네이블러"}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "12px",
+                        color: "var(--color-dim)",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {formatShortDate(review.created_at)}
+                    </span>
+                  </div>
+                  {/* 별점 */}
+                  <div style={{ display: "flex", gap: 2 }}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          fontSize: 15,
+                          color: i < review.rating ? "var(--color-accent)" : "var(--color-border)",
+                        }}
+                      >
+                        {i < review.rating ? "★" : "☆"}
+                      </span>
+                    ))}
+                  </div>
+                  {/* 코멘트 */}
+                  {review.comment && (
+                    <p
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "14px",
+                        color: "var(--color-dim)",
+                        margin: 0,
+                        lineHeight: 1.5,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {review.comment}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}

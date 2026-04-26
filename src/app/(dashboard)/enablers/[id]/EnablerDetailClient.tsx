@@ -812,26 +812,41 @@ export default function EnablerDetailClient({
                           marginBottom: "12px",
                         }}
                       >
-                        {/* Avatar fallback */}
-                        <div
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            minWidth: "40px",
-                            borderRadius: "50%",
-                            backgroundColor: "var(--color-card)",
-                            border: "1px solid var(--color-border)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "14px",
-                            fontFamily: "var(--font-display)",
-                            fontWeight: 700,
-                            color: "var(--color-dim)",
-                          }}
-                        >
-                          익
-                        </div>
+                        {/* Avatar */}
+                        {review.authorAvatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={review.authorAvatar}
+                            alt={review.authorName ?? "리뷰어"}
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              minWidth: "40px",
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "40px",
+                              height: "40px",
+                              minWidth: "40px",
+                              borderRadius: "50%",
+                              backgroundColor: "var(--color-card)",
+                              border: "1px solid var(--color-border)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "14px",
+                              fontFamily: "var(--font-display)",
+                              fontWeight: 700,
+                              color: "var(--color-dim)",
+                            }}
+                          >
+                            {(review.authorName ?? "익").slice(0, 1)}
+                          </div>
+                        )}
 
                         {/* Name + stars + date */}
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -852,7 +867,7 @@ export default function EnablerDetailClient({
                                 color: "var(--color-text)",
                               }}
                             >
-                              익명
+                              {review.authorName ?? "익명"}
                             </span>
                             <span
                               style={{

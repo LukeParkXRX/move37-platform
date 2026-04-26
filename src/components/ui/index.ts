@@ -21,3 +21,5 @@ export type { ConfirmDialogProps, ConfirmVariant } from "./ConfirmDialog";
 export { Pagination } from "./Pagination";
 
 export { FieldLabel, FieldInput, FieldSelect } from "./FormFields";
+
+export { StarRating } from "./StarRating";

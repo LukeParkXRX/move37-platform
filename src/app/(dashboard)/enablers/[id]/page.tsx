@@ -55,6 +55,8 @@ export type EnablerDetail = {
 export type ReviewItem = {
   id: string;
   authorId: string;
+  authorName: string | null;
+  authorAvatar: string | null;
   rating: number;
   comment: string;
   createdAt: string;
@@ -114,15 +116,33 @@ export default async function EnablerProfilePage({
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const reviews: ReviewItem[] = ((rawReviews as RawReviewRow[] | null) ?? []).map(
-    (r) => ({
+  const rawList = (rawReviews as RawReviewRow[] | null) ?? [];
+
+  // 작성자 정보 별도 fetch (외래키 임베드 의존 회피)
+  const authorIds = Array.from(new Set(rawList.map((r) => r.author_id)));
+  const authorMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+  if (authorIds.length > 0) {
+    const { data: authors } = await db
+      .from("users")
+      .select("id, full_name, avatar_url")
+      .in("id", authorIds);
+    for (const a of (authors ?? []) as { id: string; full_name: string | null; avatar_url: string | null }[]) {
+      authorMap.set(a.id, { full_name: a.full_name, avatar_url: a.avatar_url });
+    }
+  }
+
+  const reviews: ReviewItem[] = rawList.map((r) => {
+    const author = authorMap.get(r.author_id);
+    return {
       id: r.id,
       authorId: r.author_id,
+      authorName: author?.full_name ?? null,
+      authorAvatar: author?.avatar_url ?? null,
       rating: r.rating,
       comment: r.comment,
       createdAt: r.created_at,
-    })
-  );
+    };
+  });
 
   return <EnablerDetailClient enabler={enabler} reviews={reviews} />;
 }
