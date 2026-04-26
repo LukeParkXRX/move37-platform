@@ -37,8 +37,8 @@ const ROLE_NAV_LINKS: Record<Role, { label: string; href: string }[]> = {
     { label: "인사이트", href: "/insights" },
   ],
   super_admin: [
-    { label: "관리자 패널", href: "/admin" },
-    { label: "기관 관리", href: "/admin/orgs" },
+    { label: "관리자 패널", href: "/admin/dashboard" },
+    { label: "기관 관리", href: "/admin/organizations" },
     { label: "Enabler 관리", href: "/admin/enablers" },
     { label: "사용자", href: "/admin/users" },
   ],
