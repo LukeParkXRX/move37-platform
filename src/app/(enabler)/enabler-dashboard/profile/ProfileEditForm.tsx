@@ -320,7 +320,10 @@ export function ProfileEditForm({ initial }: Props) {
             <input
               type="number"
               value={creditRate}
-              onChange={(e) => setCreditRate(Math.max(1, parseInt(e.target.value, 10) || 1))}
+              onChange={(e) => {
+                const n = parseInt(e.target.value, 10);
+                setCreditRate(Number.isNaN(n) ? 0 : n);
+              }}
               min={1}
               step={1}
               style={{ ...inputStyle, width: "120px" }}
