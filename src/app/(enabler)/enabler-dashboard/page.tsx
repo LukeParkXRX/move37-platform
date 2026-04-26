@@ -361,6 +361,17 @@ export default async function EnablerDashboardPage() {
               <p style={{ fontWeight: 700, fontSize: "14px", marginBottom: "4px" }}>프로필 편집</p>
               <p style={{ fontSize: "12px", color: "var(--color-dim)" }}>전공·전문 분야·요율 업데이트</p>
             </Link>
+            <Link href="/enabler-dashboard/availability" style={{
+              backgroundColor: "var(--color-card)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "10px",
+              padding: "16px",
+              textDecoration: "none",
+              color: "var(--color-text)",
+            }}>
+              <p style={{ fontWeight: 700, fontSize: "14px", marginBottom: "4px" }}>가용 시간 설정</p>
+              <p style={{ fontSize: "12px", color: "var(--color-dim)" }}>요일·시간대 슬롯과 메모 관리</p>
+            </Link>
             <Link href="/session" style={{
               backgroundColor: "var(--color-card)",
               border: "1px solid var(--color-border)",
