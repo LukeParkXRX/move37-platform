@@ -2,16 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui";
-import { signInWithGoogle } from "@/lib/supabase/auth";
+import { signInWithGoogle, signInWithEmail } from "@/lib/supabase/auth";
+import { ROLE_HOME } from "@/lib/auth/roles";
+import { createClient } from "@/lib/supabase/client";
+import type { UserRole } from "@/lib/db/types";
 import TestLoginPanel from "./TestLoginPanel";
 
 const SHOW_TEST_PANEL = process.env.NEXT_PUBLIC_SHOW_TEST_DATA === "true";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
 
+  const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useToast();
 
@@ -27,6 +34,33 @@ export default function LoginPage() {
   async function handleGoogleLogin() {
     setLoading(true);
     await signInWithGoogle();
+  }
+
+  async function handleEmailLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setEmailError("");
+    setLoading(true);
+
+    const { data, error } = await signInWithEmail(email, password);
+
+    if (error || !data.user) {
+      setEmailError("이메일 또는 비밀번호가 일치하지 않습니다.");
+      setLoading(false);
+      return;
+    }
+
+    const supabase = createClient();
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", data.user.id)
+      .single<{ role: UserRole | null }>();
+
+    if (!profile?.role) {
+      router.push("/onboarding/role");
+    } else {
+      router.push(ROLE_HOME[profile.role] ?? "/");
+    }
   }
 
   return (
@@ -415,6 +449,149 @@ export default function LoginPage() {
               {loading ? "연결 중..." : "Google로 계속하기"}
             </button>
 
+            {/* ── 구분선 ── */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "24px",
+                animation: "var(--animate-slide-up)",
+                animationDelay: "0.15s",
+              }}
+            >
+              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
+              <span style={{ fontSize: "12px", fontFamily: "var(--font-body)", color: "var(--color-dim)", whiteSpace: "nowrap" }}>
+                또는 이메일로 로그인
+              </span>
+              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }} />
+            </div>
+
+            {/* ── 이메일/비밀번호 폼 ── */}
+            <form
+              onSubmit={handleEmailLogin}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                marginBottom: "24px",
+                animation: "var(--animate-slide-up)",
+                animationDelay: "0.2s",
+              }}
+            >
+              <input
+                type="email"
+                required
+                placeholder="이메일"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--color-border)",
+                  backgroundColor: "oklch(0.12 0.005 280 / 0.6)",
+                  color: "var(--color-text)",
+                  fontSize: "14px",
+                  fontFamily: "var(--font-body)",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  opacity: loading ? 0.65 : 1,
+                }}
+              />
+              <input
+                type="password"
+                required
+                minLength={6}
+                placeholder="비밀번호"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--color-border)",
+                  backgroundColor: "oklch(0.12 0.005 280 / 0.6)",
+                  color: "var(--color-text)",
+                  fontSize: "14px",
+                  fontFamily: "var(--font-body)",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  opacity: loading ? 0.65 : 1,
+                }}
+              />
+
+              {emailError && (
+                <p style={{ fontSize: "13px", fontFamily: "var(--font-body)", color: "oklch(0.65 0.2 25)", margin: 0 }}>
+                  {emailError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "12px 20px",
+                  borderRadius: "var(--radius-lg)",
+                  backgroundColor: loading ? "oklch(0.75 0.18 110 / 0.6)" : "var(--color-accent)",
+                  border: "none",
+                  color: "oklch(0.1 0 0)",
+                  fontSize: "15px",
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 700,
+                  cursor: loading ? "not-allowed" : "pointer",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {loading ? "로그인 중..." : "이메일로 로그인"}
+              </button>
+            </form>
+
+            {/* ── 보조 링크 ── */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "32px",
+                animation: "var(--animate-slide-up)",
+                animationDelay: "0.25s",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => alert("비밀번호 재설정 기능은 준비 중입니다. 관리자에게 문의해 주세요.")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  fontSize: "13px",
+                  fontFamily: "var(--font-body)",
+                  color: "var(--color-dim)",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  textUnderlineOffset: "2px",
+                }}
+              >
+                비밀번호를 잊으셨나요?
+              </button>
+              <Link
+                href="/signup"
+                style={{
+                  fontSize: "13px",
+                  fontFamily: "var(--font-body)",
+                  color: "var(--color-dim)",
+                  textDecoration: "none",
+                }}
+              >
+                계정이 없으신가요?{" "}
+                <span style={{ color: "var(--color-accent)", fontWeight: 600 }}>회원가입</span>
+              </Link>
+            </div>
+
             {/* ── 이용약관 ── */}
             <p
               style={{
@@ -425,7 +602,7 @@ export default function LoginPage() {
                 lineHeight: 1.6,
                 marginBottom: "32px",
                 animation: "var(--animate-slide-up)",
-                animationDelay: "0.15s",
+                animationDelay: "0.3s",
               }}
             >
               로그인하면{" "}
