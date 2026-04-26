@@ -247,9 +247,13 @@ export default function MyDashboardPage() {
   const { user, profile, loading } = useAuth();
   const redirected = useRef(false);
 
+  type BookingWithEnabler = DbBooking & {
+    enabler?: { full_name: string | null; avatar_url: string | null } | null;
+  };
+
   const [creditBalance, setCreditBalance] = useState(0);
-  const [confirmedBookings, setConfirmedBookings] = useState<DbBooking[]>([]);
-  const [completedBookings, setCompletedBookings] = useState<DbBooking[]>([]);
+  const [confirmedBookings, setConfirmedBookings] = useState<BookingWithEnabler[]>([]);
+  const [completedBookings, setCompletedBookings] = useState<BookingWithEnabler[]>([]);
   const [transactions, setTransactions] = useState<DbCreditTransaction[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -290,8 +294,29 @@ export default function MyDashboardPage() {
           .order("scheduled_at", { ascending: true });
 
         const allBookings: DbBooking[] = bookings ?? [];
-        setConfirmedBookings(allBookings.filter((b: DbBooking) => b.status === "confirmed"));
-        setCompletedBookings(allBookings.filter((b: DbBooking) => b.status === "completed"));
+
+        // enabler 정보 별도 조회 후 클라이언트 결합 (외래키 이름 의존 회피)
+        const enablerIds = Array.from(new Set(allBookings.map((b) => b.enabler_id)));
+        let enablerMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+        if (enablerIds.length > 0) {
+          const { data: enablers } = await db
+            .from("users")
+            .select("id, full_name, avatar_url")
+            .in("id", enablerIds);
+          enablerMap = new Map(
+            (enablers ?? []).map((u: { id: string; full_name: string | null; avatar_url: string | null }) => [
+              u.id,
+              { full_name: u.full_name, avatar_url: u.avatar_url },
+            ]),
+          );
+        }
+        const withEnabler: BookingWithEnabler[] = allBookings.map((b) => ({
+          ...b,
+          enabler: enablerMap.get(b.enabler_id) ?? null,
+        }));
+
+        setConfirmedBookings(withEnabler.filter((b) => b.status === "confirmed"));
+        setCompletedBookings(withEnabler.filter((b) => b.status === "completed"));
 
         const { data: txs } = await db
           .from("credit_transactions")
@@ -536,15 +561,39 @@ export default function MyDashboardPage() {
                           gap: "10px",
                         }}
                       >
-                        <div
-                          style={{
-                            width: "32px",
-                            height: "32px",
-                            borderRadius: "50%",
-                            backgroundColor: "var(--color-border)",
-                            flexShrink: 0,
-                          }}
-                        />
+                        {booking.enabler?.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={booking.enabler.avatar_url}
+                            alt={booking.enabler.full_name ?? "Enabler"}
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
+                              backgroundColor: "var(--color-border)",
+                              color: "var(--color-dim)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "12px",
+                              fontFamily: "var(--font-display)",
+                              fontWeight: 700,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {(booking.enabler?.full_name ?? "?").slice(0, 1)}
+                          </div>
+                        )}
                         <div>
                           <p
                             style={{
@@ -555,7 +604,7 @@ export default function MyDashboardPage() {
                               margin: 0,
                             }}
                           >
-                            Enabler
+                            {booking.enabler?.full_name ?? "Enabler"}
                           </p>
                           <p
                             style={{
